@@ -1,0 +1,1292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PMAIDE RL Lab 1</title>
+  <style>
+    :root {
+      --bg: #f3f6fb;
+      --bg2: #ffffff;
+      --bg3: #eef3ff;
+      --border: rgba(17, 24, 39, 0.1);
+      --border2: rgba(17, 24, 39, 0.16);
+      --text: #182033;
+      --text2: #4b5672;
+      --text3: #7d88a6;
+      --accent: #4a6df7;
+      --accent2: #3749d8;
+      --success: #1e9d62;
+      --warn: #d97706;
+      --danger: #d64545;
+      --purple: #7c3aed;
+      --radius: 10px;
+      --radius-lg: 14px;
+      --font: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      --mono: "Cascadia Code", "Fira Code", Consolas, monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      line-height: 1.7;
+      font-size: 17px;
+      overflow-x: hidden;
+      overflow-y: auto;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 22px;
+    }
+
+    .logo {
+      width: 34px;
+      height: 34px;
+      border-radius: 11px;
+      background: linear-gradient(135deg, var(--accent), var(--purple));
+      color: white;
+      display: grid;
+      place-items: center;
+      font-size: 18px;
+      font-weight: 800;
+    }
+
+    header h1 {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+    }
+
+    header p {
+      font-size: 11px;
+      color: var(--text2);
+      margin-top: 2px;
+    }
+
+    .header-meta {
+      margin-left: auto;
+      text-align: right;
+      font-size: 11px;
+      line-height: 1.6;
+      color: var(--text3);
+    }
+
+    .header-meta strong {
+      color: var(--text2);
+      font-weight: 600;
+    }
+
+    .layout {
+      display: flex;
+      min-height: calc(100vh - 66px);
+      height: auto;
+      min-height: 0;
+      overflow: visible;
+    }
+
+    .sidebar {
+      width: 210px;
+      flex-shrink: 0;
+      background: rgba(255,255,255,0.48);
+      border-right: 1px solid var(--border);
+      padding: 12px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      overflow: hidden;
+    }
+
+    .sidebar-section {
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text3);
+      font-weight: 700;
+      padding: 10px 8px 5px;
+    }
+
+    .nav-btn {
+      border: none;
+      background: transparent;
+      border-radius: 8px;
+      width: 100%;
+      text-align: left;
+      padding: 8px 10px;
+      font-size: 12px;
+      color: var(--text2);
+      cursor: pointer;
+      transition: 0.15s ease;
+    }
+
+    .nav-btn:hover { background: var(--bg3); }
+    .nav-btn.active {
+      background: rgba(74, 109, 247, 0.12);
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .main {
+      flex: 1;
+      min-width: 0;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 18px 22px 18px;
+    }
+
+    .panel {
+      display: none;
+      height: auto;
+    }
+
+    .panel.active {
+      display: block;
+      height: auto;
+      max-width: 980px;
+      margin: 0 auto;
+    }
+
+    .hero {
+      background: linear-gradient(135deg, rgba(74,109,247,0.12), rgba(124,58,237,0.08));
+      border: 1px solid rgba(74,109,247,0.18);
+      border-radius: var(--radius-lg);
+      padding: 18px 20px;
+      margin-bottom: 16px;
+    }
+
+    .hero h2 {
+      font-size: 24px;
+      margin-bottom: 8px;
+      color: #233069;
+    }
+
+    .hero p {
+      color: var(--text2);
+      font-size: 16px;
+      line-height: 1.8;
+    }
+
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(180px, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .stat-card {
+      border: 1px solid var(--border);
+      background: var(--bg2);
+      border-radius: var(--radius);
+      padding: 12px 14px;
+    }
+
+    .stat-label {
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text3);
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .stat-value {
+      font-size: 25px;
+      font-weight: 800;
+      color: var(--text);
+      line-height: 1.1;
+    }
+
+    .stat-note {
+      margin-top: 5px;
+      font-size: 10px;
+      color: var(--text3);
+    }
+
+    .section-box {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 16px 18px;
+      margin-bottom: 16px;
+      width: 100%;
+      max-width: 980px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .section-title {
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text3);
+      margin-bottom: 10px;
+    }
+
+    .concept-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .concept {
+      border-radius: var(--radius);
+      background: var(--bg3);
+      border: 1px solid rgba(74,109,247,0.14);
+      padding: 12px 13px;
+    }
+
+    .concept h3 {
+      font-size: 17px;
+      margin-bottom: 6px;
+      color: var(--text);
+    }
+
+    .concept p {
+      font-size: 15px;
+      color: var(--text2);
+      line-height: 1.7;
+    }
+
+    .py-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .py-tab {
+      border: 1px solid var(--border2);
+      background: var(--bg3);
+      color: var(--text2);
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: 0.15s ease;
+    }
+
+    .py-tab.active {
+      background: var(--accent2);
+      color: white;
+      border-color: var(--accent2);
+    }
+
+    .py-view { display: none; }
+    .py-view.active { display: block; }
+
+    pre.pycode {
+      background: #0d1117;
+      color: #d9e3ff;
+      border-radius: var(--radius-lg);
+      border: 1px solid rgba(255,255,255,0.05);
+      padding: 16px;
+      overflow-x: auto;
+      font-size: 12px;
+      line-height: 1.7;
+      font-family: var(--mono);
+      white-space: pre;
+      margin: 0;
+    }
+
+    .code-tag {
+      color: #8bdcff;
+    }
+    .code-key { color: #ffb86c; }
+    .code-func { color: #d1a3ff; }
+    .code-string { color: #a7f3d0; }
+    .code-comment { color: #6b7280; }
+
+    .sim-layout {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      align-items: stretch;
+      min-height: 0;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .btn {
+      border: 1px solid var(--border2);
+      background: var(--bg3);
+      color: var(--text);
+      border-radius: 8px;
+      padding: 7px 12px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: 0.15s ease;
+    }
+
+    .btn:hover { filter: brightness(0.98); }
+    .btn.primary {
+      background: var(--accent2);
+      color: white;
+      border-color: var(--accent2);
+    }
+    .btn.success {
+      background: var(--success);
+      color: white;
+      border-color: var(--success);
+    }
+    .btn.warn {
+      background: var(--warn);
+      color: white;
+      border-color: var(--warn);
+    }
+
+    .algo-toggle {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+
+    .algo-option {
+      border: 1px solid var(--border2);
+      background: var(--bg3);
+      color: var(--text2);
+      border-radius: 7px;
+      padding: 6px 10px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .algo-option.active {
+      background: var(--accent2);
+      color: white;
+      border-color: var(--accent2);
+    }
+
+    .slider-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 12px;
+      color: var(--text2);
+      margin-top: 4px;
+    }
+
+    .epsilon-control {
+      display: none;
+    }
+
+    .epsilon-control.visible {
+      display: flex !important;
+    }
+
+    input[type="range"] {
+      accent-color: var(--accent);
+      width: 160px;
+    }
+
+    canvas {
+      width: 100%;
+      max-width: 100%;
+      background: linear-gradient(180deg, #f9fbff, #f3f7ff);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      display: block;
+    }
+
+    .side-panel {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 14px;
+      width: 100%;
+    }
+
+    .side-panel h3 {
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text3);
+      margin-bottom: 12px;
+    }
+
+    .metrics {
+      display: grid;
+      gap: 10px;
+    }
+
+    .true-mean-box {
+      background: rgba(74,109,247,0.04);
+      border: 1px solid rgba(74,109,247,0.12);
+      border-radius: 8px;
+      padding: 8px 10px;
+      margin-bottom: 8px;
+      font-size: 12px;
+      color: var(--text2);
+    }
+
+    .true-mean-title {
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      font-size: 10px;
+      color: var(--text3);
+      margin-bottom: 6px;
+    }
+
+    .true-mean-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 2px 0;
+    }
+
+    .metric-row {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      background: var(--bg3);
+      font-size: 12px;
+      color: var(--text2);
+    }
+
+    .metric-row strong { color: var(--text); }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      margin-top: 10px;
+      overflow: hidden;
+      border-radius: 8px;
+    }
+
+    th, td {
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+    }
+
+    th {
+      color: var(--text3);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-size: 10px;
+      background: rgba(74,109,247,0.04);
+    }
+
+    .arm-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      background: #ecf3ff;
+      color: var(--text);
+      font-weight: 700;
+    }
+
+    .arm-badge.selected {
+      background: var(--accent2);
+      color: white;
+    }
+
+    .lab-box {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 14px 16px;
+      margin-bottom: 14px;
+    }
+
+    .lab-box h3 {
+      font-size: 14px;
+      margin-bottom: 8px;
+      color: var(--text);
+    }
+
+    .lab-box p, .lab-box li {
+      color: var(--text2);
+      font-size: 12px;
+      line-height: 1.7;
+    }
+
+    .task-card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+
+    .task-head {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 14px;
+      cursor: pointer;
+      background: rgba(74,109,247,0.02);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .task-no {
+      width: 25px;
+      height: 25px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: #eaf0ff;
+      color: var(--accent2);
+      font-size: 11px;
+      font-weight: 800;
+      flex-shrink: 0;
+    }
+
+    .task-head strong {
+      flex: 1;
+      font-size: 13px;
+      color: var(--text);
+    }
+
+    .task-body {
+      display: block;
+      padding: 12px 14px 14px;
+    }
+
+    .task-body.hidden { display: none; }
+
+    .task-body textarea {
+      width: 100%;
+      min-height: 160px;
+      resize: vertical;
+      padding: 12px 14px;
+      background: #101827;
+      color: #e5eeff;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px;
+      font-family: var(--mono);
+      font-size: 12px;
+      line-height: 1.7;
+      outline: none;
+    }
+
+    .lab-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+
+    .result-box {
+      margin-top: 10px;
+      display: none;
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .result-box.success {
+      display: block;
+      background: #ecfdf5;
+      color: #166534;
+      border: 1px solid #86efac;
+    }
+
+    .result-box.error {
+      display: block;
+      background: #fef2f2;
+      color: #991b1b;
+      border: 1px solid #fca5a5;
+    }
+
+    .small-note {
+      font-size: 11px;
+      color: var(--text3);
+      margin-top: 6px;
+    }
+
+    @media (max-width: 980px) {
+      .layout { flex-direction: column; height: auto; }
+      .sidebar {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+        flex-direction: row;
+        flex-wrap: wrap;
+        overflow: visible;
+      }
+      .sidebar-section { display: none; }
+      .sim-layout { grid-template-columns: 1fr; }
+      .stat-grid { grid-template-columns: repeat(2, minmax(150px, 1fr)); }
+    }
+
+    @media (max-width: 620px) {
+      .stat-grid { grid-template-columns: 1fr; }
+      .concept-grid { grid-template-columns: 1fr; }
+      .main { padding: 14px 14px 20px; }
+      header { padding: 12px 14px; }
+      .header-meta { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">RL</div>
+    <div>
+      <h1>Reinforcement Learning Lab</h1>
+      <p>Multi-Armed Bandit &middot; Exploration vs Exploitation</p>
+    </div>
+    <div class="header-meta">
+      <div><strong>PMAIDE RL Lab 1</strong> &middot; CSE902</div>
+      <div>Topic: Multi-Armed Bandit</div>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav class="sidebar">
+      <div class="sidebar-section">Theory</div>
+      <button class="nav-btn active" data-panel="theory">📘 Overview</button>
+      <button class="nav-btn" data-panel="simulator">📊 Simulator</button>
+      <button class="nav-btn" data-panel="code">💻 Python Code</button>
+      <div class="sidebar-section">Lab</div>
+      <button class="nav-btn" data-panel="lab">🧪 Lab Task</button>
+    </nav>
+
+    <main class="main">
+      <section class="panel active" id="panel-theory">
+        <div class="hero">
+          <h2>Multi-Armed Bandit: Where to pull next?</h2>
+          <div style="margin-top:10px; color:var(--text2); font-size:16px; line-height:1.8;">
+            <ul style="margin-left:22px; padding:0;">
+              <li>There are several arms, each with an unknown reward probability.</li>
+              <li>At each round, the agent chooses one arm and gets a reward.</li>
+              <li>The goal is to learn which arm is best while collecting as much reward as possible.</li>
+              <li>This creates the classic trade-off between exploration and exploitation.</li>
+            </ul>
+          </div>
+          <div style="margin-top:18px; text-align:center;">
+            <img src="./MAB-illustration.png" alt="Multi-armed bandit slot machine illustration" style="max-width:100%; height:auto; border-radius:12px; border:1px solid rgba(17,24,39,0.12); background:#fff; box-shadow:0 8px 20px rgba(0,0,0,0.06);" />
+          </div>
+        </div>
+
+        <div class="stat-grid">
+          <div class="stat-card">
+            <div class="stat-label">Arms</div>
+            <div class="stat-value">K</div>
+            <div class="stat-note">Number of choices</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Reward</div>
+            <div class="stat-value">R</div>
+            <div class="stat-note">Immediate reward from an action</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Explore</div>
+            <div class="stat-value">E</div>
+            <div class="stat-note">Try unknown arms</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Goal</div>
+            <div class="stat-value">Max</div>
+            <div class="stat-note">Cumulative reward over time</div>
+          </div>
+        </div>
+
+        <div class="section-box">
+          <div class="section-title">Core ideas</div>
+          <div class="concept-grid">
+            <div class="concept">
+              <h3>Action selection</h3>
+              <p>At each round, the agent chooses one slot machine or arm. Each arm has an unknown reward probability.</p>
+            </div>
+            <div class="concept">
+              <h3>Exploration</h3>
+              <p>Try unfamiliar arms to estimate their reward distribution without prematurely committing to one choice.</p>
+            </div>
+            <div class="concept">
+              <h3>Exploitation</h3>
+              <p>Use the information gathered so far to keep selecting the arm that currently appears most rewarding.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-box">
+          <div class="section-title">Common bandit strategies</div>
+          <div class="concept-grid">
+            <div class="concept">
+              <h3>Greedy Strategy</h3>
+              <p>Pick the current best-known arm to maximize short-term reward after sufficient learning.</p>
+            </div>
+            <div class="concept">
+              <h3>Epsilon-Greedy</h3>
+              <p>With probability ε, choose a random arm; otherwise choose the arm with the highest empirical mean.</p>
+            </div>
+            <div class="concept">
+              <h3>Upper Confidence Bound</h3>
+              <p>Choose the arm with the largest optimistic estimate: mean + exploration bonus based on uncertainty.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-box">
+          <div class="section-title">Action value definitions</div>
+          <div style="color:var(--text2); font-size:16px; line-height:1.8;">
+            <ul style="margin-left:22px; padding:0;">
+              <li><strong>True value:</strong> The true value of an action a is the mean reward received when action a is selected.</li>
+              <li><strong>Estimated value:</strong> If action a has been selected N_t(a) times by time t, yielding rewards R_1, R_2, ..., R_{N_t(a)}, then the estimated value is Q_t(a) = (R_1 + R_2 + ... + R_{N_t(a)}) / N_t(a).</li>
+              <li>If N_t(a) = 0, then we define Q_t(a) as a default value, such as Q_t(a) = 0.</li>
+              <li>As N_t(a) → ∞, by the law of large numbers, Q_t(a) converges to the true value of the action.</li>
+            </ul>
+          </div>
+        </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" id="panel-code">
+        <div class="section-box">
+          <div class="section-title">Python examples</div>
+          <div class="py-tabs">
+            <button class="py-tab active" data-view="bandit-basic">Basic bandit</button>
+            <button class="py-tab" data-view="eps-greedy">Epsilon-greedy</button>
+            <button class="py-tab" data-view="ucb">UCB</button>
+          </div>
+
+          <div class="py-view active" id="view-bandit-basic">
+            <pre class="pycode"><span class="code-comment"># Sample from a Bernoulli bandit</span>
+<span class="code-key">import</span> random
+
+<span class="code-func">def</span> pull_arm(probability):
+    <span class="code-key">return</span> <span class="code-key">1</span> <span class="code-key">if</span> random.random() &lt; probability <span class="code-key">else</span> <span class="code-key">0</span>
+
+probabilities = [<span class="code-string">0.10</span>, <span class="code-string">0.25</span>, <span class="code-string">0.60</span>, <span class="code-string">0.80</span>]
+rewards = []
+<span class="code-key">for</span> _ <span class="code-key">in</span> range(<span class="code-string">1000</span>):
+    arm = random.randrange(len(probabilities))
+    rewards.append(pull_arm(probabilities[arm]))
+
+print(<span class="code-string">"Average reward:"</span>, sum(rewards) / len(rewards))</pre>
+          </div>
+
+          <div class="py-view" id="view-eps-greedy">
+            <pre class="pycode"><span class="code-key">import</span> random, math
+
+<span class="code-func">def</span> epsilon_greedy(arms, epsilon, num_rounds):
+    counts = [<span class="code-key">0</span>] * len(arms)
+    values = [<span class="code-key">0.0</span>] * len(arms)
+    total_reward = <span class="code-key">0</span>
+
+    <span class="code-key">for</span> _ <span class="code-key">in</span> range(num_rounds):
+        <span class="code-key">if</span> random.random() &lt; epsilon:
+            arm = random.randrange(len(arms))
+        <span class="code-key">else</span>:
+            arm = max(range(len(arms)), key=<span class="code-key">lambda</span> i: values[i])
+
+        reward = <span class="code-key">1</span> <span class="code-key">if</span> random.random() &lt; arms[arm] <span class="code-key">else</span> <span class="code-key">0</span>
+        counts[arm] += <span class="code-key">1</span>
+        values[arm] += (reward - values[arm]) / counts[arm]
+        total_reward += reward
+
+    <span class="code-key">return</span> total_reward
+
+arms = [<span class="code-string">0.10</span>, <span class="code-string">0.20</span>, <span class="code-string">0.70</span>, <span class="code-string">0.55</span>]
+print(epsilon_greedy(arms, <span class="code-string">0.10</span>, <span class="code-string">5000</span>))</pre>
+          </div>
+
+          <div class="py-view" id="view-ucb">
+            <pre class="pycode"><span class="code-key">import</span> random, math
+
+<span class="code-func">def</span> ucb(arms, num_rounds):
+    counts = [<span class="code-key">0</span>] * len(arms)
+    rewards = [<span class="code-key">0.0</span>] * len(arms)
+    total_reward = <span class="code-key">0</span>
+
+    <span class="code-key">for</span> t <span class="code-key">in</span> range(<span class="code-key">1</span>, num_rounds + <span class="code-key">1</span>):
+        score = []
+        <span class="code-key">for</span> i <span class="code-key">in</span> range(len(arms)):
+            <span class="code-key">if</span> counts[i] == <span class="code-key">0</span>:
+                score.append((float(<span class="code-string">'inf'</span>), i))
+            <span class="code-key">else</span>:
+                bonus = math.sqrt((<span class="code-key">2</span> * math.log(t)) / counts[i])
+                score.append((rewards[i] + bonus, i))
+
+        arm = max(score, key=<span class="code-key">lambda</span> x: x[<span class="code-key">0</span>])[<span class="code-key">1</span>]
+        reward = <span class="code-key">1</span> <span class="code-key">if</span> random.random() &lt; arms[arm] <span class="code-key">else</span> <span class="code-key">0</span>
+        counts[arm] += <span class="code-key">1</span>
+        rewards[arm] += (reward - rewards[arm]) / counts[arm]
+        total_reward += reward
+
+    <span class="code-key">return</span> total_reward
+
+arms = [<span class="code-string">0.12</span>, <span class="code-string">0.45</span>, <span class="code-string">0.80</span>, <span class="code-string">0.30</span>]
+print(ucb(arms, <span class="code-string">5000</span>))</pre>
+          </div>
+
+        </div>
+      </section>
+
+      <section class="panel" id="panel-simulator">
+        <div class="section-box" style="height:auto; display:flex; flex-direction:column; padding:12px 14px 10px; margin-bottom:0;">
+          <div class="section-title" style="margin-bottom:8px;">Interactive bandit simulator</div>
+          <div class="algo-toggle" style="margin-bottom:6px;">
+            <button class="algo-option active" data-algorithm="greedy">Greedy</button>
+            <button class="algo-option" data-algorithm="epsilon">Epsilon-Greedy</button>
+            <button class="algo-option" data-algorithm="ucb">UCB</button>
+          </div>
+
+          <div id="epsilonControl" class="slider-wrap epsilon-control" style="margin-bottom:8px; display:none;">
+            <label>ε = </label>
+            <span id="epsilonValue">0.50</span>
+          </div>
+
+          <div id="statusPanel" class="slider-wrap" style="margin-bottom:8px; display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+            <div id="randomValueRow" style="display:none;"><strong>Random value:</strong> <span id="randomValueDisplay">—</span></div>
+            <div><strong>Taken action:</strong> <span id="exploitedActionDisplay">—</span></div>
+          </div>
+
+          <div id="ucbScorePanel" class="slider-wrap" style="display:none; margin-bottom:8px; flex-wrap:wrap; gap:8px;">
+            <strong>UCB values:</strong>
+            <span id="ucbScoresDisplay">—</span>
+          </div>
+
+          <div class="controls" style="margin-top:0; margin-bottom:10px;">
+            <button id="runOneBtn" class="btn primary">Run 1 step</button>
+            <button id="resetBtn" class="btn">Reset</button>
+          </div>
+
+          <div class="sim-layout" style="margin-top:0; flex:1; min-height:0;">
+            <div style="width:100%;">
+              <canvas id="banditCanvas" width="760" height="320"></canvas>
+            </div>
+
+            <div class="side-panel" style="height:auto;">
+              <h3>Machine stats</h3>
+              <div class="metrics" id="statsPanel"></div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <section class="panel" id="panel-lab">
+        <div class="lab-box">
+          <h3>Lab objective</h3>
+          <p>
+            Simulate a multi-armed bandit problem and compare how different algorithms balance exploration and exploitation.
+            Your goal is to understand why a simple greedy policy can get stuck on a mediocre arm, while uncertainty-aware methods can discover better arms more efficiently.
+          </p>
+        </div>
+
+        <div class="task-card">
+          <div class="task-head" data-task="task1">
+            <div class="task-no">1</div>
+            <strong>Implement a bandit environment</strong>
+          </div>
+          <div class="task-body">
+            <p>Write a Bernoulli reward function where each arm has a different success probability. The system should return 1 for a win and 0 for a loss.</p>
+            <textarea spellcheck="false"># Task 1: create the bandit environment
+import random
+
+arm_probabilities = [0.10, 0.35, 0.70, 0.55]
+
+def pull_arm(arm_index):
+    # Return 1 if the arm wins, otherwise 0
+    pass
+
+for arm in range(len(arm_probabilities)):
+    print(f"Arm {arm}: {pull_arm(arm)}")</textarea>
+            <div class="lab-actions">
+              <button class="btn primary">Check answer</button>
+              <button class="btn">Show hint</button>
+            </div>
+            <div class="result-box" id="result1">Expected logic: sample a random number and compare it to the arm's probability.</div>
+          </div>
+        </div>
+
+        <div class="task-card">
+          <div class="task-head" data-task="task2">
+            <div class="task-no">2</div>
+            <strong>Compare ε-greedy and UCB</strong>
+          </div>
+          <div class="task-body hidden">
+            <p>Run the same bandit environment under two strategies: ε-greedy and UCB. Record cumulative reward after 2000 rounds and explain which one learns faster.</p>
+            <textarea spellcheck="false"># Task 2: compare two algorithms
+# Implement epsilon-greedy and UCB
+# Report the cumulative reward after 2000 rounds
+
+arm_probabilities = [0.05, 0.25, 0.70, 0.60]
+
+# Insert your code below
+</textarea>
+            <div class="lab-actions">
+              <button class="btn primary">Check answer</button>
+              <button class="btn">Show hint</button>
+            </div>
+            <div class="result-box" id="result2">Hint: UCB usually performs better in early rounds because it explores uncertain arms more intelligently.</div>
+          </div>
+        </div>
+
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const navButtons = document.querySelectorAll('.nav-btn');
+    navButtons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        navButtons.forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+        const panel = btn.dataset.panel;
+        document.querySelectorAll('.panel').forEach((p) => p.classList.toggle('active', p.id === `panel-${panel}`));
+      });
+    });
+
+    document.querySelectorAll('.py-tab').forEach((tab) => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.py-tab').forEach((t) => t.classList.remove('active'));
+        document.querySelectorAll('.py-view').forEach((v) => v.classList.remove('active'));
+        tab.classList.add('active');
+        const viewId = `view-${tab.dataset.view}`;
+        document.getElementById(viewId).classList.add('active');
+      });
+    });
+
+    document.querySelectorAll('.task-head').forEach((head) => {
+      head.addEventListener('click', () => {
+        const body = head.nextElementSibling;
+        body.classList.toggle('hidden');
+      });
+    });
+
+    const state = {
+      algorithm: 'greedy',
+      epsilon: 0.5,
+      randomValue: null,
+      exploitedAction: null,
+      ucbValues: [],
+      maxSteps: 20,
+      arms: [
+        { name: 'A1', decay: 0.05, trueMean: 0.75, cur_reward: 0.90, mean: 0, pulls: 0, rewards: 0, color: '#4a6df7' },
+        { name: 'A2', decay: 0.05, trueMean: 0.70, cur_reward: 0.70, mean: 0, pulls: 0, rewards: 0, color: '#22c55e' },
+        { name: 'A3', decay: -0.08, trueMean: 0.95, cur_reward: 0.50, mean: 0, pulls: 0, rewards: 0, color: '#f59e0b' }
+      ],
+      history: [],
+      totalReward: 0,
+      round: 0,
+      lastSelected: null
+    };
+
+    function resetSimulation() {
+      state.arms.forEach((arm) => {
+        arm.mean = 0;
+        arm.pulls = 0;
+        arm.rewards = 0;
+        if (arm.name === 'A1') arm.cur_reward = 0.90;
+        if (arm.name === 'A2') arm.cur_reward = 0.70;
+        if (arm.name === 'A3') arm.cur_reward = 0.50;
+      });
+      state.history = [];
+      state.totalReward = 0;
+      state.round = 0;
+      state.lastSelected = null;
+      state.randomValue = null;
+      state.exploitedAction = null;
+      state.ucbValues = [];
+      renderStats();
+      renderHistory();
+      drawBandit();
+      updateStatusUI();
+    }
+
+    function chooseArm() {
+      if (state.round === 0) return 0;
+      if (state.round === 1) return 1;
+      if (state.round === 2) return 2;
+      const arms = state.arms;
+      const t = state.round + 1;
+
+      if (state.algorithm === 'greedy') {
+        let bestIndex = 0;
+        for (let i = 1; i < arms.length; i++) {
+          if (arms[i].mean > arms[bestIndex].mean) bestIndex = i;
+        }
+        return bestIndex;
+      }
+
+      if (state.algorithm === 'epsilon') {
+        if (Math.random() < state.epsilon) {
+          return Math.floor(Math.random() * arms.length);
+        }
+        let bestIndex = 0;
+        for (let i = 1; i < arms.length; i++) {
+          if (arms[i].mean > arms[bestIndex].mean) bestIndex = i;
+        }
+        return bestIndex;
+      }
+
+      if (state.algorithm === 'ucb') {
+        let bestIndex = 0;
+        let bestScore = -Infinity;
+        for (let i = 0; i < arms.length; i++) {
+          const arm = arms[i];
+          if (arm.pulls === 0) return i;
+          const bonus = Math.sqrt((2 * Math.log(t)) / arm.pulls);
+          const score = arm.mean + bonus;
+          if (score > bestScore) {
+            bestScore = score;
+            bestIndex = i;
+          }
+        }
+        return bestIndex;
+      }
+
+      return 0;
+    }
+
+    function updateStatusUI() {
+      const randomValueDisplay = document.getElementById('randomValueDisplay');
+      const randomValueRow = document.getElementById('randomValueRow');
+      const exploitedActionDisplay = document.getElementById('exploitedActionDisplay');
+      const ucbScorePanel = document.getElementById('ucbScorePanel');
+      const ucbScoresDisplay = document.getElementById('ucbScoresDisplay');
+      const showRandom = state.algorithm === 'epsilon';
+      const showUCB = state.algorithm === 'ucb';
+
+      if (randomValueRow) {
+        randomValueRow.style.display = showRandom ? 'block' : 'none';
+      }
+      if (randomValueDisplay) {
+        randomValueDisplay.textContent = state.randomValue === null ? '—' : state.randomValue.toFixed(2);
+      }
+      if (exploitedActionDisplay) {
+        exploitedActionDisplay.textContent = state.exploitedAction === null ? '—' : state.exploitedAction;
+      }
+      if (ucbScorePanel) {
+        ucbScorePanel.style.display = showUCB ? 'flex' : 'none';
+      }
+      if (ucbScoresDisplay) {
+        ucbScoresDisplay.textContent = state.ucbValues.length ? state.ucbValues.map((v, i) => `A${i + 1}: ${v.toFixed(2)}`).join('  |  ') : '—';
+      }
+    }
+
+    function runOneRound() {
+      if (state.round >= state.maxSteps) {
+        return;
+      }
+
+      state.randomValue = Math.random();
+      const armIndex = chooseArm();
+      const arm = state.arms[armIndex];
+      const reward = state.arms[armIndex].cur_reward;
+      state.arms[armIndex].cur_reward -= state.arms[armIndex].decay;
+      arm.pulls += 1;
+      arm.rewards += reward;
+      arm.mean = arm.rewards / arm.pulls;
+      state.totalReward += reward;
+      state.round += 1;
+      state.lastSelected = armIndex;
+      state.exploitedAction = arm.name;
+
+      if (state.algorithm === 'ucb') {
+        state.ucbValues = state.arms.map((a, i) => {
+          if (a.pulls === 0) return Infinity;
+          const bonus = Math.sqrt((2 * Math.log(state.round)) / a.pulls);
+          return a.mean + bonus;
+        });
+      } else {
+        state.ucbValues = [];
+      }
+
+      state.history.push({
+        round: state.round,
+        reward,
+        total: state.totalReward
+      });
+
+      renderStats();
+      drawBandit();
+      updateStatusUI();
+    }
+
+    function syncSimulatorHeight() {
+      const simulatorBox = document.querySelector('#panel-simulator .section-box');
+      if (!simulatorBox) return;
+      simulatorBox.style.height = 'auto';
+    }
+
+    function renderStats() {
+      const panel = document.getElementById('statsPanel');
+      panel.innerHTML = '';
+
+      const trueMeanBox = document.createElement('div');
+      trueMeanBox.className = 'true-mean-box';
+      trueMeanBox.innerHTML = `
+        <div class="true-mean-title">True mean</div>
+        ${state.arms.map((arm) => `<div class="true-mean-row"><span>${arm.name}</span><strong>q* = ${arm.trueMean.toFixed(2)}</strong></div>`).join('')}
+      `;
+      panel.appendChild(trueMeanBox);
+
+      state.arms.forEach((arm, index) => {
+        const row = document.createElement('div');
+        row.className = 'metric-row';
+        row.innerHTML = `
+          <span><span class="arm-badge ${state.lastSelected === index ? 'selected' : ''}">${arm.name}</span></span>
+          <strong>${arm.mean.toFixed(2)}</strong>
+          <span>${arm.pulls} pulls</span>
+        `;
+        panel.appendChild(row);
+      });
+
+      const totalRow = document.createElement('div');
+      totalRow.className = 'metric-row';
+      totalRow.innerHTML = `
+        <span>Total reward</span>
+        <strong>${state.totalReward}</strong>
+        <span>${state.round}/${state.maxSteps} steps</span>
+      `;
+      panel.appendChild(totalRow);
+      syncSimulatorHeight();
+    }
+
+    function renderHistory() {
+      const table = document.getElementById('historyTable');
+      table.innerHTML = '';
+      const rows = state.history.slice(-12);
+      rows.forEach((entry) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${entry.round}</td>
+          <td>${entry.reward.toFixed(2)}</td>
+          <td>${entry.total.toFixed(2)}</td>
+        `;
+        table.appendChild(tr);
+      });
+      syncSimulatorHeight();
+    }
+
+    function drawBandit() {
+      const canvas = document.getElementById('banditCanvas');
+      const ctx = canvas.getContext('2d');
+      const width = canvas.width;
+      const height = canvas.height;
+
+      ctx.clearRect(0, 0, width, height);
+      ctx.fillStyle = '#f8fbff';
+      ctx.fillRect(0, 0, width, height);
+
+      const padding = { top: 30, right: 60, bottom: 45, left: 40 };
+      const chartWidth = width - padding.left - padding.right;
+      const chartHeight = height - padding.top - padding.bottom;
+
+      ctx.strokeStyle = '#dfe7f5';
+      ctx.lineWidth = 1;
+      for (let i = 0; i <= 5; i++) {
+        const y = padding.top + (chartHeight / 5) * i;
+        ctx.beginPath();
+        ctx.moveTo(padding.left, y);
+        ctx.lineTo(width - padding.right, y);
+        ctx.stroke();
+      }
+
+      ctx.strokeStyle = '#a5b4fc';
+      ctx.setLineDash([4, 5]);
+      state.arms.forEach((arm, index) => {
+        const x = padding.left + (chartWidth / state.arms.length) * index + chartWidth / state.arms.length / 2;
+        ctx.beginPath();
+        ctx.moveTo(x, padding.top + 6);
+        ctx.lineTo(x, padding.top + chartHeight);
+        ctx.stroke();
+      });
+      ctx.setLineDash([]);
+
+      const barWidth = chartWidth / state.arms.length - 18;
+      const maxProb = 1;
+
+      state.arms.forEach((arm, index) => {
+        const x = padding.left + (chartWidth / state.arms.length) * index + 10;
+        const barHeight = (arm.mean / maxProb) * chartHeight;
+        const y = padding.top + chartHeight - barHeight;
+
+        ctx.fillStyle = arm.color;
+        ctx.fillRect(x, y, barWidth, barHeight);
+
+        if (state.lastSelected === index) {
+          ctx.strokeStyle = '#111827';
+          ctx.lineWidth = 2;
+          ctx.strokeRect(x - 2, y - 2, barWidth + 4, barHeight + 4);
+        }
+
+        ctx.fillStyle = '#1f2937';
+        ctx.font = '12px Segoe UI';
+        ctx.textAlign = 'center';
+        ctx.fillText(arm.name, x + barWidth / 2, height - 18);
+
+        ctx.fillStyle = '#475569';
+        ctx.font = '11px Segoe UI';
+        ctx.fillText(arm.mean.toFixed(2), x + barWidth / 2, y - 8);
+      });
+
+      ctx.fillStyle = '#475569';
+      ctx.font = '11px Segoe UI';
+      ctx.textAlign = 'left';
+      ctx.fillText('Reward mean', 10, 18);
+    }
+
+    function updateEpsilonVisibility() {
+      const epsilonControl = document.getElementById('epsilonControl');
+      if (!epsilonControl) return;
+      const show = state.algorithm === 'epsilon';
+      epsilonControl.classList.toggle('visible', show);
+      epsilonControl.style.display = show ? 'flex' : 'none';
+      updateStatusUI();
+    }
+
+    document.querySelectorAll('.algo-option').forEach((button) => {
+      button.addEventListener('click', () => {
+        document.querySelectorAll('.algo-option').forEach((b) => b.classList.remove('active'));
+        button.classList.add('active');
+        state.algorithm = button.dataset.algorithm;
+        updateEpsilonVisibility();
+        if (state.algorithm === 'ucb') {
+          state.ucbValues = state.arms.map((a, i) => {
+            if (a.pulls === 0) return Infinity;
+            const bonus = Math.sqrt((2 * Math.log(Math.max(1, state.round))) / a.pulls);
+            return a.mean + bonus;
+          });
+        } else {
+          state.ucbValues = [];
+        }
+        updateStatusUI();
+      });
+    });
+
+    document.getElementById('runOneBtn').addEventListener('click', () => {
+      runOneRound();
+      syncSimulatorHeight();
+    });
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      resetSimulation();
+      syncSimulatorHeight();
+    });
+
+    updateEpsilonVisibility();
+    updateStatusUI();
+    resetSimulation();
+    syncSimulatorHeight();
+  </script>
+</body>
+</html>
