@@ -1,0 +1,6 @@
+{
+  "files.autoSave": "afterDelay",
+  "workbench.editorAssociations": {
+    "*.html": "default"
+  }
+}
