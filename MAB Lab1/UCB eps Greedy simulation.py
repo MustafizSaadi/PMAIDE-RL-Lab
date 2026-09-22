@@ -40,67 +40,95 @@ def BanditGame(bandit, timesteps, epsilon=0):
 
     return rewards, optimal_actions
 
+def UCBBanditGame(bandit, timesteps, c=2):
+    arms = bandit.arms
+    Q_estimates = np.zeros(arms)
+    action_counts = np.zeros(arms)
+    rewards = np.zeros(timesteps)
+    optimal_actions = np.zeros(timesteps)
 
-# Simulating game with different parameters
-def SimulateBanditGame(n_games, arms, timesteps, epsilons):
-    avg_rewards = {epsilon: np.zeros(timesteps) for epsilon in epsilons}
-    avg_optimal_actions = {epsilon: np.zeros(timesteps) for epsilon in epsilons}
+    optimal_action = np.argmax(bandit.q_star)
+
+    for t in range(timesteps):
+        if t < arms:
+            action = t
+        else:
+            action = np.argmax(Q_estimates + c * np.sqrt(np.log(t + 1) / action_counts))
+
+        reward = bandit.get_reward(action)
+        rewards[t] = reward
+        if action == optimal_action:
+            optimal_actions[t] = 1
+        action_counts[action] += 1
+        Q_estimates[action] += (reward - Q_estimates[action]) / action_counts[action]
+
+    return rewards, optimal_actions
+
+
+# play the UCB epsilon game
+def PlayUCBEpsilon(n_games, arms, timesteps, c, epsilon):
+    avg_rewards = {epsilon: np.zeros(timesteps)}
+    avg_rewards['UCB'] = np.zeros(timesteps)
+    avg_optimal_actions = {epsilon: np.zeros(timesteps)}
+    avg_optimal_actions['UCB'] = np.zeros(timesteps)
     i = 0
     for _ in range(n_games):
         i += 1
         print(f"Simulating game {i}/{n_games}...")
         bandit = Bandit(arms)
-        for epsilon in epsilons:
-            rewards, optimal_actions = BanditGame(bandit, timesteps, epsilon)
-            avg_rewards[epsilon] += rewards
-            avg_optimal_actions[epsilon] += optimal_actions
+        rewards, optimal_actions = BanditGame(bandit, timesteps, epsilon)
+        avg_rewards[epsilon] += rewards
+        avg_optimal_actions[epsilon] += optimal_actions
 
-    for epsilon in epsilons:
-        avg_rewards[epsilon] /= n_games
-        avg_optimal_actions[epsilon] /= n_games
+        rewards_ucb, optimal_actions_ucb = UCBBanditGame(bandit, timesteps, c)
+        avg_rewards['UCB'] += rewards_ucb
+        avg_optimal_actions['UCB'] += optimal_actions_ucb
 
-    return avg_rewards, avg_optimal_actions
+    for key in avg_rewards.keys():
+        avg_rewards[key] /= n_games
 
+    for key in avg_optimal_actions.keys():
+        avg_optimal_actions[key] /= n_games
 
-# Playing the Game
-def PlayBanditGame(n_games, arms, timesteps, epsilons):
-    avg_rewards, avg_optimal_actions = SimulateBanditGame(n_games, arms, timesteps, epsilons)
     steps = np.arange(timesteps)
-    # Adjusting figure size for better clarity
-    plt.figure(figsize=(10, 10))
-    
-    # Defining colors and line styles for a visually appealing distinction
-    colors = {0: '#2E8B57', 0.01: '#FF4500', 0.1: '#1E90FF'}
-    linestyles = {0: 'dotted', 0.01: 'dashed', 0.1: 'solid'}
-    
+
+    # Setting up the figure
+    plt.figure(figsize=(10, 8))
+
     # Plotting Average Rewards
     plt.subplot(2, 1, 1)
-    for epsilon, rewards in avg_rewards.items():
-        label = 'Greedy' if epsilon == 0 else f'ε = {epsilon}'
+    for key, rewards in avg_rewards.items():
+        label = f'ε = {key}' if key != 'UCB' else 'UCB (c=2)'
+        color = 'grey' if key != 'UCB' else '#1E90FF'
+        linestyle = 'solid' if key == 'UCB' else 'dashed'
         plt.plot(
             steps,
             rewards,
             label=label,
-            color=colors[epsilon],
-            linestyle=linestyles[epsilon],
-            linewidth=2
+            color=color,
+            linestyle=linestyle,
+            linewidth=2 if key == 'UCB' else 1.5
         )
+
     plt.xlabel('Steps', fontsize=14, fontweight='bold', color='#333')
     plt.ylabel('Average Reward', fontsize=14, fontweight='bold', color='#333')
-    plt.legend(fontsize=12)
+    plt.legend(fontsize=12, loc='lower right')
     plt.title('Average Rewards vs. Steps', fontsize=16, fontweight='bold', color='#111')
+
     plt.grid(color='gray', linestyle='--', linewidth=0.5, alpha=0.7)
-    
+
     # Plotting % Optimal Actions
     plt.subplot(2, 1, 2)
-    for epsilon, optimal_action in avg_optimal_actions.items():
-        label = 'Greedy' if epsilon == 0 else f'ε = {epsilon}'
+    for key, optimal_action in avg_optimal_actions.items():
+        label = f'ε = {key}' if key != 'UCB' else 'UCB (c=2)'
+        color = 'grey' if key != 'UCB' else '#1E90FF'
+        linestyle = 'solid' if key == 'UCB' else 'dashed'
         plt.plot(
             steps,
             optimal_action * 100,
             label=label,
-            color=colors[epsilon],
-            linestyle=linestyles[epsilon],
+            color=color,
+            linestyle=linestyle,
             linewidth=2
         )
     plt.xlabel('Steps', fontsize=14, fontweight='bold', color='#333')
@@ -109,17 +137,9 @@ def PlayBanditGame(n_games, arms, timesteps, epsilons):
     plt.title('% Optimal Actions vs. Steps', fontsize=16, fontweight='bold', color='#111')
     plt.grid(color='gray', linestyle='--', linewidth=0.5, alpha=0.7)
     
-    # Tight layout and display
     plt.tight_layout(pad=3)
     # plt.show()
-    plt.savefig('greedy_simulation.png', bbox_inches='tight')
+    plt.savefig('ucb_epsilon_simulation.png', bbox_inches='tight')
 
-#GamePlay function call
-epsilons = [0,0.01,0.1]
-n_games = 2000
-arms = 10
-timesteps=1000
-
-#Test with timesteps=1500 
-
-PlayBanditGame(n_games,arms,timesteps,epsilons)
+# GamePlay
+PlayUCBEpsilon(n_games=2000, arms=10, timesteps=1000, c=2, epsilon=0.1)

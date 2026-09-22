@@ -1069,33 +1069,160 @@ arms = [<span class="code-string">0.10</span>, <span class="code-string">0.20</s
 print(epsilon_greedy(arms, <span class="code-string">0.10</span>, <span class="code-string">5000</span>))</pre>
           </div>
 
-          <div class="py-view" id="view-ucb">
-            <pre class="pycode"><span class="code-key">import</span> random, math
+          <div class="section-box" style="margin-top:12px; margin-bottom:18px; padding:14px 16px; background:rgba(14, 17, 22, 0.02); border:1px solid var(--border);">
+            <div style="font-size:11px; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; color:var(--text3); margin-bottom:8px;">Creating Multiarm Bandit for UCB</div>
+            <p style="font-size:15px; color:var(--text2); line-height:1.8; margin-bottom:12px;">
+              This implementation simulates the <strong>multi-arm bandit problem</strong> using the <strong>Upper Confidence Bound (UCB)</strong> algorithm. It dynamically balances <strong>exploration</strong> and <strong>exploitation</strong> by incorporating confidence intervals in action selection.
+            </p>
 
-<span class="code-func">def</span> ucb(arms, num_rounds):
-    counts = [<span class="code-key">0</span>] * len(arms)
-    rewards = [<span class="code-key">0.0</span>] * len(arms)
-    total_reward = <span class="code-key">0</span>
+            <div style="font-size:11px; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; color:var(--text3); margin-bottom:8px;">🔍 Key Parameters</div>
+            <ul style="margin-left:22px; color:var(--text2); font-size:15px; line-height:1.8;">
+              <li><strong>bandit</strong>: The multi-arm bandit environment containing:
+                <ul style="margin-top:4px; margin-left:18px;">
+                  <li><strong>arms</strong>: Number of arms.</li>
+                  <li><strong>q*(a)</strong>: True reward distribution for each arm.</li>
+                  <li><strong>get_reward(action)</strong>: Method to simulate the reward for a chosen arm.</li>
+                  <li><strong>timesteps</strong>: The total number of plays or time steps.</li>
+                </ul>
+              </li>
+              <li><strong>c</strong>: A parameter controlling the degree of exploration.
+                <ul style="margin-top:4px; margin-left:18px;">
+                  <li>Larger <strong>c</strong> values encourage exploration by widening the confidence bounds.</li>
+                  <li>Smaller <strong>c</strong> values focus on exploitation.</li>
+                </ul>
+              </li>
+            </ul>
 
-    <span class="code-key">for</span> t <span class="code-key">in</span> range(<span class="code-key">1</span>, num_rounds + <span class="code-key">1</span>):
-        score = []
-        <span class="code-key">for</span> i <span class="code-key">in</span> range(len(arms)):
-            <span class="code-key">if</span> counts[i] == <span class="code-key">0</span>:
-                score.append((float(<span class="code-string">'inf'</span>), i))
-            <span class="code-key">else</span>:
-                bonus = math.sqrt((<span class="code-key">2</span> * math.log(t)) / counts[i])
-                score.append((rewards[i] + bonus, i))
+            <div style="font-size:11px; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; color:var(--text3); margin-top:14px; margin-bottom:8px;">🧮 Mathematical Formulation</div>
+            <p style="font-size:15px; color:var(--text2); line-height:1.8; margin-bottom:8px;"><strong>UCB Formula:</strong></p>
+            <p style="font-size:15px; color:var(--text2); line-height:1.8; margin-bottom:8px;">The Upper Confidence Bound is calculated as:<br>Q_estimates[a] + c · √(log(t + 1) / actionCounts[a])</p>
+            <p style="font-size:15px; color:var(--text2); line-height:1.8; margin-bottom:8px;"><strong>Incremental Update:</strong></p>
+            <p style="font-size:15px; color:var(--text2); line-height:1.8; margin-bottom:8px;">The estimated reward for arm a is updated as:<br>Q_estimates[a] = Q_estimates[a] + (reward - Q_estimates[a]) / actionCounts[a]</p>
 
-        arm = max(score, key=<span class="code-key">lambda</span> x: x[<span class="code-key">0</span>])[<span class="code-key">1</span>]
-        reward = <span class="code-key">1</span> <span class="code-key">if</span> random.random() &lt; arms[arm] <span class="code-key">else</span> <span class="code-key">0</span>
-        counts[arm] += <span class="code-key">1</span>
-        rewards[arm] += (reward - rewards[arm]) / counts[arm]
-        total_reward += reward
+            <div style="font-size:11px; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; color:var(--text3); margin-top:14px; margin-bottom:8px;">📐 Algorithm</div>
+            <ol style="margin-left:22px; color:var(--text2); font-size:15px; line-height:1.8;">
+              <li><strong>Initialization</strong>:
+                <ul style="margin-top:4px; margin-left:18px;">
+                  <li>Q_estimates: An array of zeros to store the estimated reward for each arm.</li>
+                  <li>action_counts: An array of zeros to track the number of times each arm is selected.</li>
+                  <li>rewards: An array to record rewards received at each time step.</li>
+                </ul>
+              </li>
+              <li><strong>Game Simulation (for t in timesteps)</strong>:
+                <ul style="margin-top:4px; margin-left:18px;">
+                  <li>In the first <strong>arms</strong> steps, each arm is played once to gather initial information:<br>action = t for t &lt; arms</li>
+                  <li>Afterward, the UCB formula is used to select the arm with the highest Upper Confidence Bound:<br>action = max(UCBArm)</li>
+                  <li>Receive reward: reward = bandit.getReward(action)</li>
+                  <li>Increment the count for the chosen arm: actionCounts[a] = actionCounts[a] + 1</li>
+                  <li>Update the reward estimate using the incremental formula.</li>
+                </ul>
+              </li>
+              <li><strong>Return Results</strong>:
+                <ul style="margin-top:4px; margin-left:18px;">
+                  <li>rewards: A time series of rewards at each timestep.</li>
+                </ul>
+              </li>
+            </ol>
 
-    <span class="code-key">return</span> total_reward
+            <div style="font-size:11px; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; color:var(--text3); margin-top:18px; margin-bottom:8px;">🎯 Insights</div>
+            <ul style="margin-left:22px; color:var(--text2); font-size:15px; line-height:1.8;">
+              <li><strong>Exploration vs. Exploitation</strong>:
+                <ul style="margin-top:4px; margin-left:18px;">
+                  <li>The UCB formula adds a confidence interval term to the reward estimate.</li>
+                  <li>Arms with lower play counts are assigned wider confidence intervals, encouraging exploration.</li>
+                </ul>
+              </li>
+              <li><strong>Parameter c</strong>:
+                <ul style="margin-top:4px; margin-left:18px;">
+                  <li>A higher <strong>c</strong> value encourages more exploration by widening the confidence bounds.</li>
+                  <li>A lower <strong>c</strong> value focuses on exploitation by narrowing the bounds.</li>
+                </ul>
+              </li>
+              <li><strong>Performance</strong>:
+                <ul style="margin-top:4px; margin-left:18px;">
+                  <li>UCB typically performs better than <strong>ϵ-greedy</strong> as it dynamically adjusts exploration based on the number of plays and observed rewards.</li>
+                </ul>
+              </li>
+            </ul>
+          </div>
 
-arms = [<span class="code-string">0.12</span>, <span class="code-string">0.45</span>, <span class="code-string">0.80</span>, <span class="code-string">0.30</span>]
-print(ucb(arms, <span class="code-string">5000</span>))</pre>
+          <div class="py-view active" id="view-ucb-bandit">
+            <pre class="pycode"><span class="code-comment"># Defining UCB Bandit game</span>
+<span class="code-key">def</span> <span class="code-func">UCBBanditGame</span>(bandit, timesteps, c=<span class="code-key">2</span>):
+    arms = bandit.arms
+    Q_estimates = np.zeros(arms)
+    action_counts = np.zeros(arms)
+    rewards = np.zeros(timesteps)
+
+    <span class="code-key">for</span> t <span class="code-key">in</span> range(timesteps):
+        <span class="code-key">if</span> t &lt; arms:
+            action = t
+        <span class="code-key">else</span>:
+            action = np.argmax(Q_estimates + c * np.sqrt(np.log(t + <span class="code-key">1</span>) / action_counts))
+
+        reward = bandit.get_reward(action)
+        rewards[t] = reward
+
+        action_counts[action] += <span class="code-key">1</span>
+        Q_estimates[action] += (reward - Q_estimates[action]) / action_counts[action]
+
+    <span class="code-key">return</span> rewards</pre>
+          </div>
+
+          <div class="section-box" style="margin-top:12px; margin-bottom:18px; padding:14px 16px; background:rgba(14, 17, 22, 0.02); border:1px solid var(--border);">
+            <div style="font-size:11px; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; color:var(--text3); margin-bottom:8px;">Running UCB Simulations and 📊 Analyzing Output</div>
+            <p style="font-size:15px; color:var(--text2); line-height:1.8; margin-bottom:12px;">
+              Simulate the UCB algorithm and compare its performance with other methods like <strong>ϵ-greedy</strong>.
+            </p>
+
+            <pre class="pycode"><span class="code-comment"># play the UCB epsilon game</span>
+<span class="code-key">def</span> <span class="code-func">PlayUCBEpsilon</span>(n_games, arms, timesteps, c, epsilon):
+    avg_rewards = {epsilon: np.zeros(timesteps)}
+    avg_rewards[<span class="code-string">'UCB'</span>] = np.zeros(timesteps)
+
+    <span class="code-key">for</span> _ <span class="code-key">in</span> range(n_games):
+        bandit = Bandit(arms)
+        rewards, _ = BanditGame(bandit, timesteps, epsilon)
+        avg_rewards[epsilon] += rewards
+
+        rewards_ucb = UCBBanditGame(bandit, timesteps, c)
+        avg_rewards[<span class="code-string">'UCB'</span>] += rewards_ucb
+
+    <span class="code-key">for</span> key <span class="code-key">in</span> avg_rewards.keys():
+        avg_rewards[key] /= n_games
+
+    steps = np.arange(timesteps)
+
+    <span class="code-comment"># Setting up the figure</span>
+    plt.figure(figsize=(<span class="code-key">10</span>, <span class="code-key">8</span>))
+
+    <span class="code-comment"># Plotting Average Rewards</span>
+    plt.subplot(<span class="code-key">2</span>, <span class="code-key">1</span>, <span class="code-key">1</span>)
+    <span class="code-key">for</span> key, rewards <span class="code-key">in</span> avg_rewards.items():
+        label = f<span class="code-string">'ε = {key}'</span> <span class="code-key">if</span> key != <span class="code-string">'UCB'</span> <span class="code-key">else</span> <span class="code-string">'UCB (c=2)'</span>
+        color = <span class="code-string">'grey'</span> <span class="code-key">if</span> key != <span class="code-string">'UCB'</span> <span class="code-key">else</span> <span class="code-string">'#1E90FF'</span>
+        linestyle = <span class="code-string">'solid'</span> <span class="code-key">if</span> key == <span class="code-string">'UCB'</span> <span class="code-key">else</span> <span class="code-string">'dashed'</span>
+        plt.plot(
+            steps,
+            rewards,
+            label=label,
+            color=color,
+            linestyle=linestyle,
+            linewidth=<span class="code-key">2</span> <span class="code-key">if</span> key == <span class="code-string">'UCB'</span> <span class="code-key">else</span> <span class="code-key">1.5</span>
+        )
+
+    plt.xlabel(<span class="code-string">'Steps'</span>, fontsize=<span class="code-key">14</span>, fontweight=<span class="code-string">'bold'</span>, color=<span class="code-string">'#333'</span>)
+    plt.ylabel(<span class="code-string">'Average Reward'</span>, fontsize=<span class="code-key">14</span>, fontweight=<span class="code-string">'bold'</span>, color=<span class="code-string">'#333'</span>)
+    plt.legend(fontsize=<span class="code-key">12</span>, loc=<span class="code-string">'lower right'</span>)
+    plt.title(<span class="code-string">'Average Rewards vs. Steps'</span>, fontsize=<span class="code-key">16</span>, fontweight=<span class="code-string">'bold'</span>, color=<span class="code-string">'#111'</span>)
+
+    plt.grid(color=<span class="code-string">'gray'</span>, linestyle=<span class="code-string">'--'</span>, linewidth=<span class="code-string">0.5</span>, alpha=<span class="code-string">0.7</span>)
+
+    plt.tight_layout()
+    plt.show()
+
+<span class="code-comment"># GamePlay</span>
+PlayUCBEpsilon(n_games=<span class="code-key">2000</span>, arms=<span class="code-key">10</span>, timesteps=<span class="code-key">1000</span>, c=<span class="code-key">2</span>, epsilon=<span class="code-key">0.1</span>)</pre>
           </div>
 
         </div>
