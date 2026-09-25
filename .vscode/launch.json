@@ -1,0 +1,13 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Open HTML preview in browser",
+      "type": "pwa-chrome",
+      "request": "launch",
+      "url": "http://localhost:8000/PMAIDE%20Lab%201.html",
+      "webRoot": "${workspaceFolder}",
+      "sourceMaps": true
+    }
+  ]
+}

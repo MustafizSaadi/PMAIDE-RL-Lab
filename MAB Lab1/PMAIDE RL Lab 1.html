@@ -283,6 +283,36 @@
     .py-view { display: none; }
     .py-view.active { display: block; }
 
+    .chart-controls {
+      display: flex;
+      justify-content: flex-start;
+      margin-top: 12px;
+      margin-bottom: 12px;
+    }
+
+    .chart-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+      margin-top: 8px;
+    }
+
+    .chart-card {
+      background: #0d1117;
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 12px;
+      padding: 12px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.02);
+    }
+
+    .chart-card h4 {
+      margin: 0 0 8px;
+      font-size: 13px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #9aa5b1;
+    }
+
     pre.pycode {
       background: #0d1117;
       color: #d9e3ff;
@@ -664,6 +694,7 @@
       <button class="nav-btn" data-panel="code">💻 Python Code</button>
       <div class="sidebar-section">Lab</div>
       <button class="nav-btn" data-panel="lab">🧪 Lab Task</button>
+      <button class="nav-btn" data-panel="references">📚 References</button>
     </nav>
 
     <main class="main">
@@ -759,27 +790,259 @@
 
       <section class="panel" id="panel-code">
         <div class="section-box">
-          <div class="section-title">Python examples</div>
-          <div class="py-tabs">
-            <button class="py-tab active" data-view="bandit-basic">Basic bandit</button>
-            <button class="py-tab" data-view="eps-greedy">Epsilon-greedy</button>
-            <button class="py-tab" data-view="ucb">UCB</button>
+          <div class="section-title">10-Armed Bandit Problem</div>
+          <div style="margin-bottom:16px;">
+            <p style="font-size:16px; color:var(--text2); line-height:1.8; margin-bottom:10px;">
+              We are implementing a <strong>bandit problem</strong> with <strong>10 arms</strong>, where:
+            </p>
+            <ul style="margin-left:22px; color:var(--text2); font-size:16px; line-height:1.8;">
+              <li>Each arm will have a true value <strong>q*(a)</strong> sampled from a Gaussian distribution with <strong>mean 0</strong> and <strong>variance 1</strong>.</li>
+              <li>Rewards for selecting an arm <strong>a</strong> will be sampled from a Gaussian distribution with <strong>mean q(a)</strong> and <strong>variance 1</strong>.</li>
+            </ul>
           </div>
 
-          <div class="py-view active" id="view-bandit-basic">
-            <pre class="pycode"><span class="code-comment"># Sample from a Bernoulli bandit</span>
-<span class="code-key">import</span> random
+          <div style="margin-bottom:16px;">
+            <p style="font-size:16px; color:var(--text2); line-height:1.8; margin-bottom:8px;"><strong>Steps:</strong></p>
+            <ol style="margin-left:22px; color:var(--text2); font-size:16px; line-height:1.8;">
+              <li>Generate <strong>2000 independent bandit problems</strong>.</li>
+              <li>Use the <strong>sample-average method</strong> (with incremental updates) to learn action-value estimates.</li>
+              <li>Simulate learning over <strong>1000 timesteps</strong> and analyze the performance of the following algorithms:
+                <ul style="margin-top:6px; margin-left:18px;">
+                  <li><strong>Greedy</strong></li>
+                  <li><strong>ϵ-greedy</strong> (ϵ = 0.1 and ϵ = 0.01)</li>
+                </ul>
+              </li>
+              <li>Similarly, <strong>simulate the UCB algorithm</strong> on the ten-armed testbed.</li>
+              <li>Compare its performance with <strong>ϵ-greedy (ϵ = 0.1)</strong>.</li>
+            </ol>
+          </div>
 
-<span class="code-func">def</span> pull_arm(probability):
-    <span class="code-key">return</span> <span class="code-key">1</span> <span class="code-key">if</span> random.random() &lt; probability <span class="code-key">else</span> <span class="code-key">0</span>
+          <div style="margin-bottom:16px;">
+            <p style="font-size:16px; color:var(--text2); line-height:1.8; margin-bottom:8px;">
+              For each algorithm, we will generate the following plots:
+            </p>
+            <ul style="margin-left:22px; color:var(--text2); font-size:16px; line-height:1.8;">
+              <li><strong>Average Reward vs. Time:</strong> Tracks the <strong>average reward</strong> obtained over time.</li>
+              <li><strong>% Optimal Actions vs. Time:</strong> Tracks the <strong>percentage of times the optimal action</strong> is chosen over time.</li>
+            </ul>
+          </div>
 
-probabilities = [<span class="code-string">0.10</span>, <span class="code-string">0.25</span>, <span class="code-string">0.60</span>, <span class="code-string">0.80</span>]
-rewards = []
-<span class="code-key">for</span> _ <span class="code-key">in</span> range(<span class="code-string">1000</span>):
-    arm = random.randrange(len(probabilities))
-    rewards.append(pull_arm(probabilities[arm]))
+          <div class="section-box" style="margin-top:12px; margin-bottom:18px; padding:14px 16px; background:rgba(14, 17, 22, 0.02); border:1px solid var(--border);">
+            <div style="font-size:11px; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; color:var(--text3); margin-bottom:8px;">📌 Imports</div>
+            <pre class="pycode"># import necessary libraries here
+import numpy as np
+import matplotlib.pyplot as plt
+np.random.seed(63)</pre>
+          </div>
 
-print(<span class="code-string">"Average reward:"</span>, sum(rewards) / len(rewards))</pre>
+          <div class="section-box" style="margin-top:12px; margin-bottom:18px; padding:14px 16px; background:rgba(14, 17, 22, 0.02); border:1px solid var(--border);">
+            <div style="font-size:11px; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; color:var(--text3); margin-bottom:8px;">🔨 Building the Bandit Object</div>
+            <p style="font-size:15px; color:var(--text2); line-height:1.8; margin-bottom:10px;">We start by constructing the <strong>Bandit Object</strong>, representing the individual arms of the bandit.</p>
+            <pre class="pycode"># Defining bandit object
+class Bandit(object):
+    def __init__(self, arms=10):
+        self.arms = arms
+        self.q_star = np.random.normal(0, 1, self.arms)  # true action values
+
+    def get_reward(self, action):
+        return np.random.normal(self.q_star[action], 1)  # rewards sampled from N(q*(a), 1)</pre>
+          </div>
+
+          <div class="section-box" style="margin-top:12px; margin-bottom:18px; padding:14px 16px; background:rgba(14, 17, 22, 0.02); border:1px solid var(--border);">
+            <div style="font-size:11px; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; color:var(--text3); margin-bottom:8px;">Defining the Multiarm Bandit for Epsilon Greedy Approach</div>
+            <p style="font-size:15px; color:var(--text2); line-height:1.8; margin-bottom:12px;">
+              This implementation simulates the <strong>multi-arm bandit problem</strong> using the <strong>epsilon-greedy (ϵ-greedy)</strong> method. Here's a step-by-step explanation:
+            </p>
+
+            <div style="font-size:11px; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; color:var(--text3); margin-bottom:8px;">Key Parameters</div>
+            <ol style="margin-left:22px; color:var(--text2); font-size:15px; line-height:1.8;">
+              <li><strong>bandit</strong>: The multi-arm bandit environment containing:
+                <ul style="margin-top:4px; margin-left:18px;">
+                  <li><strong>arms</strong>: Number of arms.</li>
+                  <li><strong>q*(a)</strong>: True reward distribution for each arm.</li>
+                  <li><strong>get_reward(action)</strong>: Method to simulate the reward for a chosen arm.</li>
+                </ul>
+              </li>
+              <li><strong>timesteps</strong>: The total number of plays or time steps.</li>
+              <li><strong>epsilon (ϵ)</strong>: The probability of choosing a random (exploratory) action.
+                <ul style="margin-top:4px; margin-left:18px;">
+                  <li>With probability 1−ϵ, we select the arm with the <strong>highest estimated value</strong> (exploitation).</li>
+                  <li>With probability ϵ, we select a <strong>random arm</strong> (exploration).</li>
+                </ul>
+              </li>
+            </ol>
+
+            <div style="font-size:11px; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; color:var(--text3); margin-top:14px; margin-bottom:8px;">Mathematical Formulation</div>
+            <p style="font-size:15px; color:var(--text2); line-height:1.8; margin-bottom:8px;"><strong>Incremental Update Formula:</strong></p>
+            <p style="font-size:15px; color:var(--text2); line-height:1.8; margin-bottom:8px;">The estimated reward for arm a is updated as:<br>q_estimates[a] = q_estimates[a] + (reward - q_estimates[a]) / action_counts[a]</p>
+            <p style="font-size:15px; color:var(--text2); line-height:1.8; margin-bottom:8px;"><strong>Action Selection:</strong></p>
+            <ol style="margin-left:22px; color:var(--text2); font-size:15px; line-height:1.8;">
+              <li>Exploitation: action = argmax(q_estimates)</li>
+              <li>Exploration: action = randomly chosen arm</li>
+            </ol>
+
+            <div style="font-size:11px; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; color:var(--text3); margin-top:14px; margin-bottom:8px;">Algorithm</div>
+            <ol style="margin-left:22px; color:var(--text2); font-size:15px; line-height:1.8;">
+              <li><strong>Initialization</strong>:
+                <ul style="margin-top:4px; margin-left:18px;">
+                  <li>q_estimates: array of zeros to store the estimated reward for each arm.</li>
+                  <li>action_counts: array of zeros to track the number of times each arm is selected.</li>
+                  <li>rewards: array to record rewards received at each time step.</li>
+                  <li>optimal_actions: array to record whether the optimal arm was selected at each time step.</li>
+                </ul>
+              </li>
+              <li><strong>Identifying the Optimal Arm</strong>:<br>optimal_action = argmax(q*(a))</li>
+              <li><strong>Game Simulation (for t in timesteps)</strong>:
+                <ul style="margin-top:4px; margin-left:18px;">
+                  <li>Generate a random number p ~ U(0,1).</li>
+                  <li>If p &lt; epsilon: <strong>Exploration</strong> → choose a random arm.</li>
+                  <li>Otherwise: <strong>Exploitation</strong> → choose the arm with the highest estimated reward: action = argmax(q_estimates)</li>
+                  <li>Receive reward: reward = bandit.get_reward(action)</li>
+                  <li>If the chosen action matches the optimal arm: optimal_actions[t] = 1; else 0.</li>
+                  <li>Increment action counts and update reward estimate using the incremental formula.</li>
+                </ul>
+              </li>
+              <li><strong>Return Results</strong>:
+                <ul style="margin-top:4px; margin-left:18px;">
+                  <li>rewards: time series of rewards at each timestep.</li>
+                  <li>optimal_actions: time series indicating whether the optimal action was selected.</li>
+                </ul>
+              </li>
+            </ol>
+
+            <div style="font-size:11px; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; color:var(--text3); margin-top:18px; margin-bottom:8px;">Bandit Game</div>
+            <pre class="pycode"><span class="code-comment"># Defining Multiarm bandit game using epsilon greedy approach</span>
+<span class="code-key">def</span> <span class="code-func">BanditGame</span>(bandit, timesteps, epsilon=<span class="code-key">0</span>):
+    arms = bandit.arms
+    q_estimates = np.zeros(arms)
+    action_counts = np.zeros(arms)
+    rewards = np.zeros(timesteps)
+    optimal_actions = np.zeros(timesteps)
+
+    optimal_action = np.argmax(bandit.q_star)
+
+    <span class="code-key">for</span> t <span class="code-key">in</span> range(timesteps):
+        p = np.random.rand()
+        <span class="code-key">if</span> p &lt; epsilon:
+            action = np.random.choice(arms)
+        <span class="code-key">else</span>:
+            action = np.argmax(q_estimates)
+
+        reward = bandit.get_reward(action)
+        rewards[t] = reward
+
+        <span class="code-key">if</span> action == optimal_action:
+            optimal_actions[t] = <span class="code-key">1</span>
+
+        action_counts[action] += <span class="code-key">1</span>
+        q_estimates[action] += (reward - q_estimates[action]) / action_counts[action]
+
+    <span class="code-key">return</span> rewards, optimal_actions</pre>
+
+            <div style="font-size:11px; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; color:var(--text3); margin-top:18px; margin-bottom:8px;">Simulating the Game with Parameters</div>
+            <p style="font-size:15px; color:var(--text2); line-height:1.8; margin-bottom:8px;">
+              This section explores the simulation with different <strong>parameters</strong>, such as exploration strategies.
+            </p>
+
+            <div style="font-size:11px; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; color:var(--text3); margin-bottom:8px;">Insights</div>
+            <ul style="margin-left:22px; color:var(--text2); font-size:15px; line-height:1.8;">
+              <li><strong>Balancing Exploration and Exploitation</strong>:
+                <ul style="margin-top:4px; margin-left:18px;">
+                  <li><strong>High ϵ</strong>: Encourages exploration.</li>
+                  <li><strong>Low ϵ</strong>: Favors exploitation.</li>
+                </ul>
+              </li>
+              <li><strong>Optimal Action Tracking</strong>:
+                <ul style="margin-top:4px; margin-left:18px;">
+                  <li>Tracks how often the best action (with the highest q*(a)) is selected.</li>
+                </ul>
+              </li>
+            </ul>
+            <p style="font-size:15px; color:var(--text2); line-height:1.8; margin-top:10px; margin-bottom:12px;">
+              This approach helps evaluate how well the ϵ-greedy algorithm performs over multiple time steps and compares exploration vs. exploitation strategies.
+            </p>
+
+            <pre class="pycode"><span class="code-comment"># Simulating game with different parameters</span>
+<span class="code-key">def</span> <span class="code-func">SimulateBanditGame</span>(n_games, arms, timesteps, epsilons):
+    avg_rewards = {epsilon: np.zeros(timesteps) <span class="code-key">for</span> epsilon <span class="code-key">in</span> epsilons}
+    avg_optimal_actions = {epsilon: np.zeros(timesteps) <span class="code-key">for</span> epsilon <span class="code-key">in</span> epsilons}
+
+    <span class="code-key">for</span> _ <span class="code-key">in</span> range(n_games):
+        bandit = Bandit(arms)
+        <span class="code-key">for</span> epsilon <span class="code-key">in</span> epsilons:
+            rewards, optimal_actions = BanditGame(bandit, timesteps, epsilon)
+            avg_rewards[epsilon] += rewards
+            avg_optimal_actions[epsilon] += optimal_actions
+
+    <span class="code-key">for</span> epsilon <span class="code-key">in</span> epsilons:
+        avg_rewards[epsilon] /= n_games
+        avg_optimal_actions[epsilon] /= n_games
+
+    <span class="code-key">return</span> avg_rewards, avg_optimal_actions</pre>
+
+            <div style="font-size:11px; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; color:var(--text3); margin-top:18px; margin-bottom:8px;">Playing Game for Greedy Approach</div>
+            <p style="font-size:15px; color:var(--text2); line-height:1.8; margin-bottom:8px;">
+              Run the simulation with the <strong>Greedy algorithm</strong>, and analyze results like average rewards and optimal actions.
+            </p>
+
+            <pre class="pycode"><span class="code-comment"># Playing the Game</span>
+<span class="code-key">def</span> <span class="code-func">PlayBanditGame</span>(n_games, arms, timesteps, epsilons):
+    avg_rewards, avg_optimal_actions = SimulateBanditGame(n_games, arms, timesteps, epsilons)
+    steps = np.arange(timesteps)
+    <span class="code-comment"># Adjusting figure size for better clarity</span>
+    plt.figure(figsize=(<span class="code-key">10</span>, <span class="code-key">10</span>))
+
+    <span class="code-comment"># Defining colors and line styles for a visually appealing distinction</span>
+    colors = {<span class="code-key">0</span>: <span class="code-string">'#2E8B57'</span>, <span class="code-string">0.01</span>: <span class="code-string">'#FF4500'</span>, <span class="code-string">0.1</span>: <span class="code-string">'#1E90FF'</span>}
+    linestyles = {<span class="code-key">0</span>: <span class="code-string">'dotted'</span>, <span class="code-string">0.01</span>: <span class="code-string">'dashed'</span>, <span class="code-string">0.1</span>: <span class="code-string">'solid'</span>}
+
+    <span class="code-comment"># Plotting Average Rewards</span>
+    plt.subplot(<span class="code-key">2</span>, <span class="code-key">1</span>, <span class="code-key">1</span>)
+    <span class="code-key">for</span> epsilon, rewards <span class="code-key">in</span> avg_rewards.items():
+        label = <span class="code-string">'Greedy'</span> <span class="code-key">if</span> epsilon == <span class="code-key">0</span> <span class="code-key">else</span> f<span class="code-string">'ε = {epsilon}'</span>
+        plt.plot(
+            steps,
+            rewards,
+            label=label,
+            color=colors[epsilon],
+            linestyle=linestyles[epsilon],
+            linewidth=<span class="code-key">2</span>
+        )
+    plt.xlabel(<span class="code-string">'Steps'</span>, fontsize=<span class="code-key">14</span>, fontweight=<span class="code-string">'bold'</span>, color=<span class="code-string">'#333'</span>)
+    plt.ylabel(<span class="code-string">'Average Reward'</span>, fontsize=<span class="code-key">14</span>, fontweight=<span class="code-string">'bold'</span>, color=<span class="code-string">'#333'</span>)
+    plt.legend(fontsize=<span class="code-key">12</span>)
+    plt.title(<span class="code-string">'Average Rewards vs. Steps'</span>, fontsize=<span class="code-key">16</span>, fontweight=<span class="code-string">'bold'</span>, color=<span class="code-string">'#111'</span>)
+    plt.grid(color=<span class="code-string">'gray'</span>, linestyle=<span class="code-string">'--'</span>, linewidth=<span class="code-string">0.5</span>, alpha=<span class="code-string">0.7</span>)
+
+    <span class="code-comment"># Plotting % Optimal Actions</span>
+    plt.subplot(<span class="code-key">2</span>, <span class="code-key">1</span>, <span class="code-key">2</span>)
+    <span class="code-key">for</span> epsilon, optimal_action <span class="code-key">in</span> avg_optimal_actions.items():
+        label = <span class="code-string">'Greedy'</span> <span class="code-key">if</span> epsilon == <span class="code-key">0</span> <span class="code-key">else</span> f<span class="code-string">'ε = {epsilon}'</span>
+        plt.plot(
+            steps,
+            optimal_action * <span class="code-key">100</span>,
+            label=label,
+            color=colors[epsilon],
+            linestyle=linestyles[epsilon],
+            linewidth=<span class="code-key">2</span>
+        )
+    plt.xlabel(<span class="code-string">'Steps'</span>, fontsize=<span class="code-key">14</span>, fontweight=<span class="code-string">'bold'</span>, color=<span class="code-string">'#333'</span>)
+    plt.ylabel(<span class="code-string">'% Optimal Actions'</span>, fontsize=<span class="code-key">14</span>, fontweight=<span class="code-string">'bold'</span>, color=<span class="code-string">'#333'</span>)
+    plt.legend(fontsize=<span class="code-key">12</span>)
+    plt.title(<span class="code-string">'% Optimal Actions vs. Steps'</span>, fontsize=<span class="code-key">16</span>, fontweight=<span class="code-string">'bold'</span>, color=<span class="code-string">'#111'</span>)
+    plt.grid(color=<span class="code-string">'gray'</span>, linestyle=<span class="code-string">'--'</span>, linewidth=<span class="code-string">0.5</span>, alpha=<span class="code-string">0.7</span>)
+
+    <span class="code-comment"># Tight layout and display</span>
+    plt.tight_layout(pad=<span class="code-key">3</span>)
+    plt.show()</pre>
+
+            <pre class="pycode"><span class="code-comment"># GamePlay function call</span>
+<span class="code-key">epsilons</span> = [<span class="code-key">0</span>, <span class="code-string">0.01</span>, <span class="code-string">0.1</span>]
+<span class="code-key">n_games</span> = <span class="code-key">2000</span>
+<span class="code-key">arms</span> = <span class="code-key">10</span>
+<span class="code-key">timesteps</span> = <span class="code-key">1000</span>
+
+PlayBanditGame(n_games, arms, timesteps, epsilons)</pre>
           </div>
 
           <div class="py-view" id="view-eps-greedy">
@@ -807,33 +1070,160 @@ arms = [<span class="code-string">0.10</span>, <span class="code-string">0.20</s
 print(epsilon_greedy(arms, <span class="code-string">0.10</span>, <span class="code-string">5000</span>))</pre>
           </div>
 
-          <div class="py-view" id="view-ucb">
-            <pre class="pycode"><span class="code-key">import</span> random, math
+          <div class="section-box" style="margin-top:12px; margin-bottom:18px; padding:14px 16px; background:rgba(14, 17, 22, 0.02); border:1px solid var(--border);">
+            <div style="font-size:11px; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; color:var(--text3); margin-bottom:8px;">Creating Multiarm Bandit for UCB</div>
+            <p style="font-size:15px; color:var(--text2); line-height:1.8; margin-bottom:12px;">
+              This implementation simulates the <strong>multi-arm bandit problem</strong> using the <strong>Upper Confidence Bound (UCB)</strong> algorithm. It dynamically balances <strong>exploration</strong> and <strong>exploitation</strong> by incorporating confidence intervals in action selection.
+            </p>
 
-<span class="code-func">def</span> ucb(arms, num_rounds):
-    counts = [<span class="code-key">0</span>] * len(arms)
-    rewards = [<span class="code-key">0.0</span>] * len(arms)
-    total_reward = <span class="code-key">0</span>
+            <div style="font-size:11px; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; color:var(--text3); margin-bottom:8px;">🔍 Key Parameters</div>
+            <ul style="margin-left:22px; color:var(--text2); font-size:15px; line-height:1.8;">
+              <li><strong>bandit</strong>: The multi-arm bandit environment containing:
+                <ul style="margin-top:4px; margin-left:18px;">
+                  <li><strong>arms</strong>: Number of arms.</li>
+                  <li><strong>q*(a)</strong>: True reward distribution for each arm.</li>
+                  <li><strong>get_reward(action)</strong>: Method to simulate the reward for a chosen arm.</li>
+                  <li><strong>timesteps</strong>: The total number of plays or time steps.</li>
+                </ul>
+              </li>
+              <li><strong>c</strong>: A parameter controlling the degree of exploration.
+                <ul style="margin-top:4px; margin-left:18px;">
+                  <li>Larger <strong>c</strong> values encourage exploration by widening the confidence bounds.</li>
+                  <li>Smaller <strong>c</strong> values focus on exploitation.</li>
+                </ul>
+              </li>
+            </ul>
 
-    <span class="code-key">for</span> t <span class="code-key">in</span> range(<span class="code-key">1</span>, num_rounds + <span class="code-key">1</span>):
-        score = []
-        <span class="code-key">for</span> i <span class="code-key">in</span> range(len(arms)):
-            <span class="code-key">if</span> counts[i] == <span class="code-key">0</span>:
-                score.append((float(<span class="code-string">'inf'</span>), i))
-            <span class="code-key">else</span>:
-                bonus = math.sqrt((<span class="code-key">2</span> * math.log(t)) / counts[i])
-                score.append((rewards[i] + bonus, i))
+            <div style="font-size:11px; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; color:var(--text3); margin-top:14px; margin-bottom:8px;">🧮 Mathematical Formulation</div>
+            <p style="font-size:15px; color:var(--text2); line-height:1.8; margin-bottom:8px;"><strong>UCB Formula:</strong></p>
+            <p style="font-size:15px; color:var(--text2); line-height:1.8; margin-bottom:8px;">The Upper Confidence Bound is calculated as:<br>Q_estimates[a] + c · √(log(t + 1) / actionCounts[a])</p>
+            <p style="font-size:15px; color:var(--text2); line-height:1.8; margin-bottom:8px;"><strong>Incremental Update:</strong></p>
+            <p style="font-size:15px; color:var(--text2); line-height:1.8; margin-bottom:8px;">The estimated reward for arm a is updated as:<br>Q_estimates[a] = Q_estimates[a] + (reward - Q_estimates[a]) / actionCounts[a]</p>
 
-        arm = max(score, key=<span class="code-key">lambda</span> x: x[<span class="code-key">0</span>])[<span class="code-key">1</span>]
-        reward = <span class="code-key">1</span> <span class="code-key">if</span> random.random() &lt; arms[arm] <span class="code-key">else</span> <span class="code-key">0</span>
-        counts[arm] += <span class="code-key">1</span>
-        rewards[arm] += (reward - rewards[arm]) / counts[arm]
-        total_reward += reward
+            <div style="font-size:11px; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; color:var(--text3); margin-top:14px; margin-bottom:8px;">📐 Algorithm</div>
+            <ol style="margin-left:22px; color:var(--text2); font-size:15px; line-height:1.8;">
+              <li><strong>Initialization</strong>:
+                <ul style="margin-top:4px; margin-left:18px;">
+                  <li>Q_estimates: An array of zeros to store the estimated reward for each arm.</li>
+                  <li>action_counts: An array of zeros to track the number of times each arm is selected.</li>
+                  <li>rewards: An array to record rewards received at each time step.</li>
+                </ul>
+              </li>
+              <li><strong>Game Simulation (for t in timesteps)</strong>:
+                <ul style="margin-top:4px; margin-left:18px;">
+                  <li>In the first <strong>arms</strong> steps, each arm is played once to gather initial information:<br>action = t for t &lt; arms</li>
+                  <li>Afterward, the UCB formula is used to select the arm with the highest Upper Confidence Bound:<br>action = max(UCBArm)</li>
+                  <li>Receive reward: reward = bandit.getReward(action)</li>
+                  <li>Increment the count for the chosen arm: actionCounts[a] = actionCounts[a] + 1</li>
+                  <li>Update the reward estimate using the incremental formula.</li>
+                </ul>
+              </li>
+              <li><strong>Return Results</strong>:
+                <ul style="margin-top:4px; margin-left:18px;">
+                  <li>rewards: A time series of rewards at each timestep.</li>
+                </ul>
+              </li>
+            </ol>
 
-    <span class="code-key">return</span> total_reward
+            <div style="font-size:11px; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; color:var(--text3); margin-top:18px; margin-bottom:8px;">🎯 Insights</div>
+            <ul style="margin-left:22px; color:var(--text2); font-size:15px; line-height:1.8;">
+              <li><strong>Exploration vs. Exploitation</strong>:
+                <ul style="margin-top:4px; margin-left:18px;">
+                  <li>The UCB formula adds a confidence interval term to the reward estimate.</li>
+                  <li>Arms with lower play counts are assigned wider confidence intervals, encouraging exploration.</li>
+                </ul>
+              </li>
+              <li><strong>Parameter c</strong>:
+                <ul style="margin-top:4px; margin-left:18px;">
+                  <li>A higher <strong>c</strong> value encourages more exploration by widening the confidence bounds.</li>
+                  <li>A lower <strong>c</strong> value focuses on exploitation by narrowing the bounds.</li>
+                </ul>
+              </li>
+              <li><strong>Performance</strong>:
+                <ul style="margin-top:4px; margin-left:18px;">
+                  <li>UCB typically performs better than <strong>ϵ-greedy</strong> as it dynamically adjusts exploration based on the number of plays and observed rewards.</li>
+                </ul>
+              </li>
+            </ul>
+          </div>
 
-arms = [<span class="code-string">0.12</span>, <span class="code-string">0.45</span>, <span class="code-string">0.80</span>, <span class="code-string">0.30</span>]
-print(ucb(arms, <span class="code-string">5000</span>))</pre>
+          <div class="py-view active" id="view-ucb-bandit">
+            <pre class="pycode"><span class="code-comment"># Defining UCB Bandit game</span>
+<span class="code-key">def</span> <span class="code-func">UCBBanditGame</span>(bandit, timesteps, c=<span class="code-key">2</span>):
+    arms = bandit.arms
+    Q_estimates = np.zeros(arms)
+    action_counts = np.zeros(arms)
+    rewards = np.zeros(timesteps)
+
+    <span class="code-key">for</span> t <span class="code-key">in</span> range(timesteps):
+        <span class="code-key">if</span> t &lt; arms:
+            action = t
+        <span class="code-key">else</span>:
+            action = np.argmax(Q_estimates + c * np.sqrt(np.log(t + <span class="code-key">1</span>) / action_counts))
+
+        reward = bandit.get_reward(action)
+        rewards[t] = reward
+
+        action_counts[action] += <span class="code-key">1</span>
+        Q_estimates[action] += (reward - Q_estimates[action]) / action_counts[action]
+
+    <span class="code-key">return</span> rewards</pre>
+          </div>
+
+          <div class="section-box" style="margin-top:12px; margin-bottom:18px; padding:14px 16px; background:rgba(14, 17, 22, 0.02); border:1px solid var(--border);">
+            <div style="font-size:11px; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; color:var(--text3); margin-bottom:8px;">Running UCB Simulations and 📊 Analyzing Output</div>
+            <p style="font-size:15px; color:var(--text2); line-height:1.8; margin-bottom:12px;">
+              Simulate the UCB algorithm and compare its performance with other methods like <strong>ϵ-greedy</strong>.
+            </p>
+
+            <pre class="pycode"><span class="code-comment"># play the UCB epsilon game</span>
+<span class="code-key">def</span> <span class="code-func">PlayUCBEpsilon</span>(n_games, arms, timesteps, c, epsilon):
+    avg_rewards = {epsilon: np.zeros(timesteps)}
+    avg_rewards[<span class="code-string">'UCB'</span>] = np.zeros(timesteps)
+
+    <span class="code-key">for</span> _ <span class="code-key">in</span> range(n_games):
+        bandit = Bandit(arms)
+        rewards, _ = BanditGame(bandit, timesteps, epsilon)
+        avg_rewards[epsilon] += rewards
+
+        rewards_ucb = UCBBanditGame(bandit, timesteps, c)
+        avg_rewards[<span class="code-string">'UCB'</span>] += rewards_ucb
+
+    <span class="code-key">for</span> key <span class="code-key">in</span> avg_rewards.keys():
+        avg_rewards[key] /= n_games
+
+    steps = np.arange(timesteps)
+
+    <span class="code-comment"># Setting up the figure</span>
+    plt.figure(figsize=(<span class="code-key">10</span>, <span class="code-key">8</span>))
+
+    <span class="code-comment"># Plotting Average Rewards</span>
+    plt.subplot(<span class="code-key">2</span>, <span class="code-key">1</span>, <span class="code-key">1</span>)
+    <span class="code-key">for</span> key, rewards <span class="code-key">in</span> avg_rewards.items():
+        label = f<span class="code-string">'ε = {key}'</span> <span class="code-key">if</span> key != <span class="code-string">'UCB'</span> <span class="code-key">else</span> <span class="code-string">'UCB (c=2)'</span>
+        color = <span class="code-string">'grey'</span> <span class="code-key">if</span> key != <span class="code-string">'UCB'</span> <span class="code-key">else</span> <span class="code-string">'#1E90FF'</span>
+        linestyle = <span class="code-string">'solid'</span> <span class="code-key">if</span> key == <span class="code-string">'UCB'</span> <span class="code-key">else</span> <span class="code-string">'dashed'</span>
+        plt.plot(
+            steps,
+            rewards,
+            label=label,
+            color=color,
+            linestyle=linestyle,
+            linewidth=<span class="code-key">2</span> <span class="code-key">if</span> key == <span class="code-string">'UCB'</span> <span class="code-key">else</span> <span class="code-key">1.5</span>
+        )
+
+    plt.xlabel(<span class="code-string">'Steps'</span>, fontsize=<span class="code-key">14</span>, fontweight=<span class="code-string">'bold'</span>, color=<span class="code-string">'#333'</span>)
+    plt.ylabel(<span class="code-string">'Average Reward'</span>, fontsize=<span class="code-key">14</span>, fontweight=<span class="code-string">'bold'</span>, color=<span class="code-string">'#333'</span>)
+    plt.legend(fontsize=<span class="code-key">12</span>, loc=<span class="code-string">'lower right'</span>)
+    plt.title(<span class="code-string">'Average Rewards vs. Steps'</span>, fontsize=<span class="code-key">16</span>, fontweight=<span class="code-string">'bold'</span>, color=<span class="code-string">'#111'</span>)
+
+    plt.grid(color=<span class="code-string">'gray'</span>, linestyle=<span class="code-string">'--'</span>, linewidth=<span class="code-string">0.5</span>, alpha=<span class="code-string">0.7</span>)
+
+    plt.tight_layout()
+    plt.show()
+
+<span class="code-comment"># GamePlay</span>
+PlayUCBEpsilon(n_games=<span class="code-key">2000</span>, arms=<span class="code-key">10</span>, timesteps=<span class="code-key">1000</span>, c=<span class="code-key">2</span>, epsilon=<span class="code-key">0.1</span>)</pre>
           </div>
 
         </div>
@@ -940,6 +1330,23 @@ arm_probabilities = [0.05, 0.25, 0.70, 0.60]
           </div>
         </div>
 
+      </section>
+
+      <section class="panel" id="panel-references">
+        <div class="section-box">
+          <div class="section-title">References</div>
+          <ol style="margin-left:22px; color:var(--text2); font-size:16px; line-height:1.9; padding:0;">
+            <li>
+              <strong>Sutton, R. S., &amp; Barto, A. G.</strong> <em>Reinforcement Learning: An Introduction.</em>
+              Sections 2.1–2.3 and 2.6.
+            </li>
+            <li>
+              <a href="https://www.kaggle.com/code/pacificrm/simulating-the-multi-armed-bandit/notebook" target="_blank" rel="noopener noreferrer" style="color:var(--accent); text-decoration:none;">
+                Simulating the Multi-Armed Bandit — Kaggle notebook
+              </a>
+            </li>
+          </ol>
+        </div>
       </section>
     </main>
   </div>
@@ -1164,6 +1571,7 @@ arm_probabilities = [0.05, 0.25, 0.70, 0.60]
 
     function renderHistory() {
       const table = document.getElementById('historyTable');
+      if (!table) return;
       table.innerHTML = '';
       const rows = state.history.slice(-12);
       rows.forEach((entry) => {
