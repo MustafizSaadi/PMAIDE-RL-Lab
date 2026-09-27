@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PMAIDE Q Learning Lab 1</title>
+  <style>
+    :root {
+      --bg: #f3f6fb;
+      --bg2: #ffffff;
+      --bg3: #eef3ff;
+      --border: rgba(17, 24, 39, 0.1);
+      --border2: rgba(17, 24, 39, 0.16);
+      --text: #182033;
+      --text2: #4b5672;
+      --text3: #7d88a6;
+      --accent: #4a6df7;
+      --accent2: #3749d8;
+      --success: #1e9d62;
+      --warn: #d97706;
+      --danger: #d64545;
+      --purple: #7c3aed;
+      --radius: 10px;
+      --radius-lg: 14px;
+      --font: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      --mono: "Cascadia Code", "Fira Code", Consolas, monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      line-height: 1.7;
+      font-size: 17px;
+      overflow-x: hidden;
+      overflow-y: auto;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: rgba(255,255,255,0.9);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 22px;
+    }
+
+    .logo {
+      width: 34px;
+      height: 34px;
+      border-radius: 11px;
+      background: linear-gradient(135deg, var(--accent), var(--purple));
+      color: white;
+      display: grid;
+      place-items: center;
+      font-size: 18px;
+      font-weight: 800;
+    }
+
+    header h1 {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+    }
+
+    header p {
+      font-size: 11px;
+      color: var(--text2);
+      margin-top: 2px;
+    }
+
+    .header-meta {
+      margin-left: auto;
+      text-align: right;
+      font-size: 11px;
+      line-height: 1.6;
+      color: var(--text3);
+    }
+
+    .header-meta strong {
+      color: var(--text2);
+      font-weight: 600;
+    }
+
+    .layout {
+      display: flex;
+      min-height: calc(100vh - 66px);
+      height: auto;
+      min-height: 0;
+      overflow: visible;
+    }
+
+    .sidebar {
+      width: 210px;
+      flex-shrink: 0;
+      background: rgba(255,255,255,0.48);
+      border-right: 1px solid var(--border);
+      padding: 12px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      overflow: hidden;
+    }
+
+    .sidebar-section {
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text3);
+      font-weight: 700;
+      padding: 10px 8px 5px;
+    }
+
+    .nav-btn {
+      border: none;
+      background: transparent;
+      border-radius: 8px;
+      width: 100%;
+      text-align: left;
+      padding: 8px 10px;
+      font-size: 12px;
+      color: var(--text2);
+      cursor: pointer;
+      transition: 0.15s ease;
+    }
+
+    .nav-btn:hover { background: var(--bg3); }
+    .nav-btn.active {
+      background: rgba(74, 109, 247, 0.12);
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .main {
+      flex: 1;
+      min-width: 0;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 18px 22px 18px;
+    }
+
+    .panel {
+      display: none;
+      height: auto;
+    }
+
+    .panel.active {
+      display: block;
+      height: auto;
+      max-width: 980px;
+      margin: 0 auto;
+    }
+
+    .hero {
+      background: linear-gradient(135deg, rgba(74,109,247,0.12), rgba(124,58,237,0.08));
+      border: 1px solid rgba(74,109,247,0.18);
+      border-radius: var(--radius-lg);
+      padding: 18px 20px;
+      margin-bottom: 16px;
+    }
+
+    .hero h2 {
+      font-size: 24px;
+      margin-bottom: 8px;
+      color: #233069;
+    }
+
+    .hero p {
+      color: var(--text2);
+      font-size: 16px;
+      line-height: 1.8;
+    }
+
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(180px, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .stat-card {
+      border: 1px solid var(--border);
+      background: var(--bg2);
+      border-radius: var(--radius);
+      padding: 12px 14px;
+    }
+
+    .stat-label {
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text3);
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .stat-value {
+      font-size: 25px;
+      font-weight: 800;
+      color: var(--text);
+      line-height: 1.1;
+    }
+
+    .stat-note {
+      margin-top: 5px;
+      font-size: 10px;
+      color: var(--text3);
+    }
+
+    .section-box {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 16px 18px;
+      margin-bottom: 16px;
+      width: 100%;
+      max-width: 980px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .section-title {
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text3);
+      margin-bottom: 10px;
+    }
+
+    .concept-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .concept {
+      border-radius: var(--radius);
+      background: var(--bg3);
+      border: 1px solid rgba(74,109,247,0.14);
+      padding: 12px 13px;
+    }
+
+    .concept h3 {
+      font-size: 17px;
+      margin-bottom: 6px;
+      color: var(--text);
+    }
+
+    .concept p, .section-box p, .section-box li {
+      font-size: 15px;
+      color: var(--text2);
+      line-height: 1.8;
+    }
+
+    .formula-box {
+      background: #f7f9ff;
+      border: 1px solid rgba(74,109,247,0.18);
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin: 12px 0;
+      overflow-x: auto;
+      font-family: var(--mono);
+      font-size: 15px;
+      color: var(--text);
+    }
+
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .table th, .table td {
+      border-bottom: 1px solid var(--border);
+      padding: 10px 12px;
+      text-align: left;
+      vertical-align: top;
+      font-size: 15px;
+      color: var(--text2);
+    }
+
+    .table th {
+      background: var(--bg3);
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text3);
+      font-weight: 800;
+    }
+
+    .link {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .link:hover { text-decoration: underline; }
+
+    @media (max-width: 900px) {
+      .stat-grid, .concept-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    @media (max-width: 680px) {
+      .layout { flex-direction: column; }
+      .sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--border); }
+      .stat-grid, .concept-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">Q</div>
+    <div>
+      <h1>Reinforcement Learning Lab</h1>
+      <p>Q-Learning &middot; Value-Based Methods</p>
+    </div>
+    <div class="header-meta">
+      <div><strong>PMAIDE Q Learning Lab 1</strong> &middot; CSE902</div>
+      <div>Topic: Q-Learning and MDPs</div>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav class="sidebar">
+      <div class="sidebar-section">Theory</div>
+      <button class="nav-btn active" data-panel="overview">📘 Overview</button>
+      <button class="nav-btn" data-panel="value-based">📊 Value-Based Methods</button>
+      <button class="nav-btn" data-panel="bellman">🧠 Bellman Equation</button>
+      <button class="nav-btn" data-panel="td">⚡ TD Learning</button>
+      <button class="nav-btn" data-panel="recap">📝 Q-Learning Recap</button>
+      <button class="nav-btn" data-panel="simulation">🎮 Q-Learning Simulation</button>
+      <div class="sidebar-section">Resources</div>
+      <button class="nav-btn" data-panel="references">📚 References</button>
+    </nav>
+
+    <main class="main">
+      <section class="panel active" id="panel-overview">
+        <div class="hero">
+          <h2>Reinforcement Learning: learning from interaction</h2>
+          <p>
+            Reinforcement Learning (RL) is a branch of machine learning in which an agent learns how to behave by interacting with an environment.
+            The agent takes actions, receives rewards, and updates its strategy to maximize long-term cumulative reward.
+          </p>
+        </div>
+
+        <div class="stat-grid">
+          <div class="stat-card">
+            <div class="stat-label">Agent</div>
+            <div class="stat-value">Learner</div>
+            <div class="stat-note">Makes decisions</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Environment</div>
+            <div class="stat-value">World</div>
+            <div class="stat-note">Responds to actions</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Signal</div>
+            <div class="stat-value">Reward</div>
+            <div class="stat-note">Feedback for good/bad choices</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Goal</div>
+            <div class="stat-value">Max Return</div>
+            <div class="stat-note">Cumulative reward over time</div>
+          </div>
+        </div>
+
+        <div class="section-box">
+          <div class="section-title">What is RL?</div>
+          <p>
+            In RL, the agent is not told the correct action in advance. Instead, it explores the environment, observes the consequences of each action,
+            and learns which actions lead to better outcomes over time. This is similar to how humans learn by trial and error.
+          </p>
+          <p style="margin-top:10px;">
+            At each time step <strong>t</strong>, the agent observes a state <strong>s<t> </t></strong>, selects an action <strong>a<t></t></strong>, receives a reward <strong>r<t+1></t+1></strong>,
+            and moves to a new state <strong>s<t+1></t+1></strong>. The agent tries to learn a policy that makes future rewards as large as possible.
+          </p>
+        </div>
+
+        <div class="section-box">
+          <div class="section-title">MDP properties</div>
+          <p>
+            The standard mathematical model for RL is a <strong>Markov Decision Process (MDP)</strong>. An MDP is defined by a set of components that describe interaction between the
+            agent and its environment.
+          </p>
+
+          <table class="table" aria-label="MDP properties">
+            <thead>
+              <tr>
+                <th>Component</th>
+                <th>Meaning</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>S</strong></td>
+                <td>State space: all possible situations the agent can be in.</td>
+              </tr>
+              <tr>
+                <td><strong>A</strong></td>
+                <td>Action space: all actions available to the agent.</td>
+              </tr>
+              <tr>
+                <td><strong>P</strong></td>
+                <td>Transition function: probability of moving to a next state and reward after an action.</td>
+              </tr>
+              <tr>
+                <td><strong>R</strong></td>
+                <td>Reward function: the immediate feedback received after taking an action in a state.</td>
+              </tr>
+              <tr>
+                <td><strong>γ</strong></td>
+                <td>Discount factor: trades off immediate reward vs future reward.</td>
+              </tr>
+              <tr>
+                <td><strong>π</strong></td>
+                <td>Policy: the strategy the agent uses to select actions.</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="formula-box">
+            P(s', r | s, a) = probability of transitioning to next state s' and receiving reward r when action a is taken in state s
+          </div>
+
+          <p style="margin-top:10px;">
+            The <strong>Markov property</strong> means that the future depends only on the current state and action, not on the full history of how the agent arrived there.
+            In other words, once we know the current state, the rest of the past is not needed for future decisions.
+          </p>
+        </div>
+
+        <div class="section-box">
+          <div class="section-title">Objective</div>
+          <p>
+            The agent's goal is to maximize the expected cumulative reward, also called the <strong>return</strong>.
+          </p>
+          <div class="formula-box">
+            G_t = r_{t+1} + γ r_{t+2} + γ² r_{t+3} + ... = Σ_{k=0}^{∞} γ^k r_{t+k+1}
+          </div>
+          <p>
+            A discount factor <strong>γ ∈ [0,1]</strong> makes rewards farther in the future less important than immediate rewards.
+            This helps the agent trade off short-term reward and long-term planning.
+          </p>
+        </div>
+      </section>
+
+      <section class="panel" id="panel-value-based">
+        <div class="section-box">
+          <div class="section-title">Value-based methods</div>
+          <p>
+            <strong>Value-based methods</strong> learn value functions and then choose actions that lead to the best estimated return.
+            These methods do not explicitly learn a policy function; instead, they estimate how good each state or state-action pair is.
+          </p>
+
+          <div class="concept-grid" style="margin-top:12px;">
+            <div class="concept">
+              <h3>State value</h3>
+              <p><strong>V(s)</strong> estimates how good it is to be in a state, assuming the agent follows a given policy afterward.</p>
+            </div>
+            <div class="concept">
+              <h3>Action value</h3>
+              <p><strong>Q(s, a)</strong> estimates how good it is to take action <strong>a</strong> in state <strong>s</strong>.</p>
+            </div>
+            <div class="concept">
+              <h3>Decision rule</h3>
+              <p>The agent chooses the action with the highest estimated action value, often called the greedy action.</p>
+            </div>
+          </div>
+
+          <div class="formula-box">
+            Q(s, a) = expected return after taking action a in state s and following the optimal policy thereafter
+          </div>
+
+          <p style="margin-top:12px;">
+            The <strong>Q</strong> comes from <strong>“the Quality”</strong> of that action at that state — it represents the value of taking action <strong>a</strong> in state <strong>s</strong>.
+            In Q-learning, the core idea is to estimate <strong>Q(s, a)</strong> values directly from interaction data. This makes it a classic <strong>model-free</strong>,
+            <strong>value-based</strong> algorithm because it does not require a model of the environment's transition probabilities.
+          </p>
+
+          <div class="section-box" style="margin-top:14px; background:rgba(14,17,22,0.02); border-color:var(--border);">
+            <div class="section-title">Why value-based methods are useful</div>
+            <ul style="margin-left:22px; padding:0;">
+              <li>They learn a compact estimate of expected future reward.</li>
+              <li>They work well when the action space is moderate and the environment is not fully known.</li>
+              <li>They form the basis for algorithms such as Q-learning and SARSA.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" id="panel-bellman">
+        <div class="section-box">
+          <div class="section-title">Bellman equations</div>
+          <p>
+            Bellman equations express the idea that the value of a state can be written in terms of the immediate reward plus the discounted value of the next state.
+            They are the foundation of many RL algorithms, including dynamic programming and TD methods.
+          </p>
+
+          <div class="formula-box">
+            V(s) = Σ_{a} π(a|s) Σ_{s', r} P(s', r | s, a) [r + γ V(s')]
+          </div>
+
+          <p>
+            This is the <strong>Bellman expectation equation</strong>. It says that the value of a state is the expected immediate reward plus the discounted value of the next state,
+            weighted by the policy and the environment dynamics.
+          </p>
+
+          <div class="formula-box">
+            Q*(s, a) = Σ_{s', r} P(s', r | s, a) [r + γ max_{a'} Q*(s', a')]
+          </div>
+
+          <p>
+            This is the <strong>Bellman optimality equation</strong> for action values. It defines the optimal action-value function as the expected reward of taking action <strong>a</strong>
+            now, plus the best future action from the next state.
+          </p>
+
+          <div class="formula-box">
+            V*(s) = max_a Σ_{s', r} P(s', r | s, a) [r + γ V*(s')]
+          </div>
+
+          <p>
+            The optimal policy is the one that chooses actions with the highest value in every state. In practice, RL agents do not usually know the exact transition model, so
+            they learn these values from samples gathered while interacting with the environment.
+          </p>
+        </div>
+      </section>
+
+      <section class="panel" id="panel-td">
+        <div class="section-box">
+          <div class="section-title">Temporal difference learning</div>
+          <p>
+            <strong>Temporal Difference (TD)</strong> learning combines ideas from Monte Carlo methods and dynamic programming. It updates value estimates using the difference between
+            the current estimate and a better estimate formed from observed data.
+          </p>
+
+          <div class="formula-box">
+            Q(s, a) ← Q(s, a) + α [r + γ max_{a'} Q(s', a') - Q(s, a)]
+          </div>
+
+          <p>
+            This is the classic <strong>Q-learning update</strong>. The term inside brackets is the <strong>TD error</strong>:
+          </p>
+          <ul style="margin-left:22px; padding:0;">
+            <li><strong>r + γ max Q(s', a')</strong> is the target estimate from the next state.</li>
+            <li><strong>Q(s, a)</strong> is the current estimate.</li>
+            <li><strong>α</strong> is the learning rate.</li>
+          </ul>
+
+          <div class="section-box" style="margin-top:14px; background:rgba(14,17,22,0.02); border-color:var(--border);">
+            <div class="section-title">Why TD is important</div>
+            <ul style="margin-left:22px; padding:0;">
+              <li>It learns online, without waiting for the full episode to finish.</li>
+              <li>It can be applied in continuing environments where tasks do not end cleanly.</li>
+              <li>It combines immediate feedback with bootstrapped estimates from future states.</li>
+            </ul>
+          </div>
+
+          <p style="margin-top:12px;">
+            This lab focuses on <strong>value-based TD methods</strong> and especially <strong>Q-learning</strong>, which is one of the most widely used RL algorithms.
+            We are skipping policy-based methods and Monte Carlo-only approaches in this lab.
+          </p>
+        </div>
+      </section>
+
+      <section class="panel" id="panel-recap">
+        <div class="section-box">
+          <div class="section-title">Q-learning recap</div>
+          <p>
+            <strong>Q-learning</strong> is the reinforcement learning algorithm that trains a <strong>Q-function</strong>, an action-value function stored in memory as a
+            <strong>Q-table</strong>. For a given state and action, the Q-function looks up the corresponding value in the table.
+          </p>
+
+          <div class="formula-box">
+            Q(s, a) = expected cumulative reward when taking action a in state s and then following the optimal policy thereafter
+          </div>
+
+          <p style="margin-top:12px;">
+            The <strong>Q</strong> stands for <strong>quality</strong>: it is the value of taking a particular action in a given state. In other words, <strong>Q(s, a)</strong> tells us how good that action is right now.
+          </p>
+
+          <p style="margin-top:10px;">
+            At the start, the Q-table is often initialized to zeros or arbitrary values, so it is not very useful. As the agent interacts with the environment and updates its table,
+            the estimates become better and better approximations of the true action values.
+          </p>
+
+          <div class="section-box" style="margin-top:16px; background:rgba(74,109,247,0.03); border-color:rgba(74,109,247,0.18);">
+            <div class="section-title">A simple Q-learning example</div>
+            <p>
+              Imagine a mouse in a small maze. It always starts at the same point and tries to reach the big pile of cheese while avoiding poison. The episode ends if it eats poison,
+              reaches the cheese, or exceeds the step limit.
+            </p>
+            <ul style="margin:10px 0 0 22px; padding:0;">
+              <li><strong>+1</strong>: small cheese</li>
+              <li><strong>+10</strong>: large cheese</li>
+              <li><strong>-10</strong>: poison</li>
+              <li><strong>+0</strong>: empty cell or too many steps</li>
+            </ul>
+            <p style="margin-top:10px;">
+              The agent learns by trying actions, receiving rewards, and updating <strong>Q(s, a)</strong> values. Over time, it learns that some actions lead to higher long-term reward than others,
+              and it builds an optimal policy that prefers the best actions in each state.
+            </p>
+          </div>
+
+          <div class="concept-grid" style="margin-top:14px;">
+            <div class="concept">
+              <h3>Q-table</h3>
+              <p>Stores the estimated value for each state-action pair, enabling quick lookup during learning and decision making.</p>
+            </div>
+            <div class="concept">
+              <h3>Exploration</h3>
+              <p>The agent tries actions it has not tried much to discover better outcomes and improve the Q-table.</p>
+            </div>
+            <div class="concept">
+              <h3>Optimal policy</h3>
+              <p>Once the Q-function is good enough, the best action in each state is the one with the maximum Q-value, <strong>argmax_a Q(s, a)</strong>.</p>
+            </div>
+          </div>
+
+          <div class="section-box" style="margin-top:16px; background:rgba(14,17,22,0.02); border-color:var(--border);">
+            <div class="section-title">Why this matters</div>
+            <ul style="margin-left:22px; padding:0;">
+              <li>Q-learning is <strong>model-free</strong>: it does not need a model of the environment dynamics.</li>
+              <li>It is <strong>off-policy</strong>: it learns the optimal policy while following exploratory behavior.</li>
+              <li>It updates values using bootstrapping from the next state, which is the essence of temporal-difference learning.</li>
+              <li>When the Q-table converges, the greedy policy based on it becomes optimal.</li>
+            </ul>
+          </div>
+
+          <div class="section-box" style="margin-top:16px; background:rgba(74,109,247,0.03); border-color:rgba(74,109,247,0.18);">
+            <div class="section-title">Q-learning update</div>
+            <div class="formula-box">
+              Q(s, a) ← Q(s, a) + α [r + γ max_{a'} Q(s', a') - Q(s, a)]
+            </div>
+            <p style="margin-top:12px;">
+              This update says: move the current estimate toward a better target using the observed reward and the best estimated value from the next state.
+              The difference between the target and the current estimate is the TD error.
+            </p>
+          </div>
+
+          <div class="section-box" style="margin-top:16px; background:rgba(14,17,22,0.02); border-color:var(--border);">
+            <div class="section-title">Q-learning pseudocode</div>
+            <pre style="white-space:pre-wrap; margin:0; font-family:var(--mono); font-size:15px; color:var(--text2); background:rgba(17,24,39,0.02); border:1px solid rgba(17,24,39,0.08); border-radius:8px; padding:14px; line-height:1.8;">
+Initialize Q(s, a) arbitrarily for all s, a
+For each episode:
+    Initialize state s
+    Repeat for each step in the episode:
+        Choose action a from state s using an exploration strategy (for example, ε-greedy)
+        Take action a, observe reward r and next state s'
+        Q(s, a) ← Q(s, a) + α [r + γ max_a' Q(s', a') − Q(s, a)]
+        s ← s'
+    Until s is terminal
+            </pre>
+          </div>
+
+          <p style="margin-top:12px;">
+            In short, Q-learning learns from experience by repeatedly updating state-action values. Through enough exploration and learning, the agent eventually discovers which actions
+            maximize long-term reward and acts accordingly.
+          </p>
+        </div>
+      </section>
+
+      <section class="panel" id="panel-simulation">
+        <div class="section-box">
+          <div class="section-title">Q-learning simulation</div>
+          <p>
+            This simplified maze example follows the Q-learning update rule used in the course. The agent starts in the same state, explores with an epsilon-greedy policy,
+            and updates a Q-table after each action.
+          </p>
+
+          <div style="display:flex; gap:10px; flex-wrap:wrap; margin:16px 0;">
+            <button id="q-step-btn" style="border:none; background:linear-gradient(135deg, var(--accent), var(--purple)); color:white; padding:10px 16px; border-radius:8px; font-weight:700; cursor:pointer;">Next step</button>
+            <button id="q-reset-btn" style="border:1px solid var(--border); background:var(--bg2); color:var(--text); padding:10px 16px; border-radius:8px; font-weight:600; cursor:pointer;">Reset</button>
+          </div>
+
+          <div style="display:grid; grid-template-columns: minmax(220px, 1.1fr) minmax(260px, 1.2fr); gap:12px; margin-top:12px;">
+            <div style="background:rgba(74,109,247,0.04); border:1px solid rgba(74,109,247,0.18); border-radius:12px; padding:12px;">
+              <div class="section-title" style="margin-bottom:8px;">Maze</div>
+              <div id="maze-grid" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; min-height:220px;"></div>
+            </div>
+
+            <div style="background:rgba(14,17,22,0.02); border:1px solid var(--border); border-radius:12px; padding:12px;">
+              <div class="section-title" style="margin-bottom:8px;">Current update</div>
+              <div id="sim-status" style="font-size:15px; color:var(--text2); line-height:1.8;"></div>
+            </div>
+          </div>
+
+          <div class="formula-box" id="td-formula" style="margin-top:16px;">
+            Q(s, a) ← Q(s, a) + α [r + γ max_{a'} Q(s', a') - Q(s, a)]
+          </div>
+
+          <div id="td-summary" style="margin-top:12px; color:var(--text2); font-size:15px; line-height:1.8;"></div>
+
+          <div style="margin-top:16px; overflow-x:auto;">
+            <table class="table" id="q-sim-table" aria-label="Q-table simulation"></table>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" id="panel-references">
+        <div class="section-box">
+          <div class="section-title">References</div>
+          <ol style="margin-left:22px; color:var(--text2); font-size:16px; line-height:1.9; padding:0;">
+            <li>
+              <a class="link" href="https://huggingface.co/learn/deep-rl-course/en/unit2/what-is-rl" target="_blank" rel="noopener noreferrer">What is Reinforcement Learning?</a>
+            </li>
+            <li>
+              <a class="link" href="https://huggingface.co/learn/deep-rl-course/en/unit2/two-types-value-based-methods" target="_blank" rel="noopener noreferrer">Two Types of Value-Based Methods</a>
+            </li>
+            <li>
+              <a class="link" href="https://huggingface.co/learn/deep-rl-course/en/unit2/bellman-equation" target="_blank" rel="noopener noreferrer">Bellman Equation</a>
+            </li>
+            <li>
+              <a class="link" href="https://huggingface.co/learn/deep-rl-course/en/unit2/mc-vs-td" target="_blank" rel="noopener noreferrer">Monte Carlo vs TD</a>
+            </li>
+            <li>
+              <a class="link" href="https://huggingface.co/learn/deep-rl-course/en/unit2/q-learning-example" target="_blank" rel="noopener noreferrer">A Q-Learning Example</a>
+            </li>
+            <li>
+              <a class="link" href="https://huggingface.co/learn/deep-rl-course/en/unit2/q-learning-recap" target="_blank" rel="noopener noreferrer">Q-Learning Recap</a>
+            </li>
+          </ol>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const navButtons = document.querySelectorAll('.nav-btn');
+    navButtons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        navButtons.forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+        const panel = btn.dataset.panel;
+        document.querySelectorAll('.panel').forEach((p) => p.classList.toggle('active', p.id === `panel-${panel}`));
+      });
+    });
+
+    const qSteps = [
+      { state: 'S0', epsilon: 0.2, action: 'Up', reward: 0, nextState: 'S0', terminal: false, qBefore: 0, gamma: 0.99, alpha: 0.1, target: 0, tdError: 0, updated: 0, info: 'The agent keeps a constant exploration rate while evaluating the Up action.' },
+      { state: 'S0', epsilon: 0.2, action: 'Down', reward: 0, nextState: 'S3', terminal: false, qBefore: 0, gamma: 0.99, alpha: 0.1, target: 0, tdError: 0, updated: 0, info: 'The Down action is evaluated with the same epsilon value of 0.2.' },
+      { state: 'S0', epsilon: 0.2, action: 'Left', reward: 0, nextState: 'S0', terminal: false, qBefore: 0, gamma: 0.99, alpha: 0.1, target: 0, tdError: 0, updated: 0, info: 'The Left action is considered in this state under constant exploration.' },
+      { state: 'S0', epsilon: 0.2, action: 'Right', reward: 1, nextState: 'S1', terminal: false, qBefore: 0, gamma: 0.99, alpha: 0.1, target: 1, tdError: 1, updated: 0.1, info: 'A positive reward is received when moving toward the next state.' },
+
+      { state: 'S1', epsilon: 0.2, action: 'Up', reward: 0, nextState: 'S1', terminal: false, qBefore: 0, gamma: 0.99, alpha: 0.1, target: 0, tdError: 0, updated: 0, info: 'Up keeps the agent in the maze while the exploration rate remains fixed.' },
+      { state: 'S1', epsilon: 0.2, action: 'Down', reward: -10, nextState: 'S4', terminal: false, qBefore: 0, gamma: 0.99, alpha: 0.1, target: 0, tdError: 0, updated: 0, info: 'Down moves deeper into the maze with no immediate reward.' },
+      { state: 'S1', epsilon: 0.2, action: 'Left', reward: 0, nextState: 'S0', terminal: false, qBefore: 0, gamma: 0.99, alpha: 0.1, target: 0, tdError: 0, updated: 0, info: 'Left is another non-terminal action under constant epsilon.' },
+      { state: 'S1', epsilon: 0.2, action: 'Right', reward: 0, nextState: 'S2', terminal: false, qBefore: 0, gamma: 0.99, alpha: 0.1, target: 0, tdError: 0, updated: 0, info: 'Right keeps the walk moving through the grid without immediate reward.' },
+
+      { state: 'S2', epsilon: 0.2, action: 'Up', reward: 0, nextState: 'S2', terminal: false, qBefore: 0, gamma: 0.99, alpha: 0.1, target: 0, tdError: 0, updated: 0, info: 'Moving upward continues the exploration pattern at the same epsilon.' },
+      { state: 'S2', epsilon: 0.2, action: 'Down', reward: 10, nextState: 'S5', terminal: false, qBefore: 0, gamma: 0.99, alpha: 0.1, target: 0, tdError: 0, updated: 0, info: 'Down contributes to value learning with a constant exploration probability.' },
+      { state: 'S2', epsilon: 0.2, action: 'Left', reward: 0, nextState: 'S1', terminal: false, qBefore: 0, gamma: 0.99, alpha: 0.1, target: 0, tdError: 0, updated: 0, info: 'Left is another valid action evaluated with the same epsilon value.' },
+      { state: 'S2', epsilon: 0.2, action: 'Right', reward: 0, nextState: 'S2', terminal: false, qBefore: 0, gamma: 0.99, alpha: 0.1, target: 0, tdError: 0, updated: 0, info: 'Right explores the next cell while the environment still remains non-terminal.' },
+
+      { state: 'S3', epsilon: 0.2, action: 'Up', reward: 0, nextState: 'S0', terminal: false, qBefore: 0, gamma: 0.99, alpha: 0.1, target: 0, tdError: 0, updated: 0, info: 'Up helps refine the value estimate from the mid-grid state.' },
+      { state: 'S3', epsilon: 0.2, action: 'Down', reward: 0, nextState: 'S3', terminal: false, qBefore: 0, gamma: 0.99, alpha: 0.1, target: 0, tdError: 0, updated: 0, info: 'Down is also evaluated with epsilon fixed at 0.2.' },
+      { state: 'S3', epsilon: 0.2, action: 'Left', reward: 0, nextState: 'S3', terminal: false, qBefore: 0, gamma: 0.99, alpha: 0.1, target: 0, tdError: 0, updated: 0, info: 'Left keeps the trajectory within the non-terminal region.' },
+      { state: 'S3', epsilon: 0.2, action: 'Right', reward: -10, nextState: 'S4', terminal: false, qBefore: 0, gamma: 0.99, alpha: 0.1, target: 10, tdError: 10, updated: 1, info: 'The right move toward the goal yields a strongly positive reward.' },
+
+      { state: 'S4', epsilon: 0.2, action: 'Up', reward: -8, nextState: 'S2', terminal: true, qBefore: 0, gamma: 0.99, alpha: 0.1, target: -10, tdError: -10, updated: -1, info: 'The poison state is terminal, so the episode ends immediately.' },
+      { state: 'S4', epsilon: 0.2, action: 'Down', reward: -10, nextState: 'S4', terminal: true, qBefore: 0, gamma: 0.99, alpha: 0.1, target: -10, tdError: -10, updated: -1, info: 'The terminal penalty is applied consistently for all actions in poison.' },
+      { state: 'S4', epsilon: 0.2, action: 'Left', reward: -10, nextState: 'S3', terminal: true, qBefore: 0, gamma: 0.99, alpha: 0.1, target: -10, tdError: -10, updated: -1, info: 'Every action from poison is terminal and carries the same penalty.' },
+      { state: 'S4', epsilon: 0.2, action: 'Right', reward: -10, nextState: 'S5', terminal: true, qBefore: 0, gamma: 0.99, alpha: 0.1, target: -10, tdError: -10, updated: -1, info: 'The terminal state update reflects the strong negative reward of poison.' },
+
+      { state: 'S5', epsilon: 0.2, action: 'Up', reward: -1, nextState: 'S3', terminal: true, qBefore: 0, gamma: 0.99, alpha: 0.1, target: 10, tdError: 10, updated: 1, info: 'The goal state ends the episode with a positive terminal reward.' },
+      { state: 'S5', epsilon: 0.2, action: 'Down', reward: 10, nextState: 'S5', terminal: true, qBefore: 0, gamma: 0.99, alpha: 0.1, target: 10, tdError: 10, updated: 1, info: 'The goal state is terminal and keeps the reward positive.' },
+      { state: 'S5', epsilon: 0.2, action: 'Left', reward: -20, nextState: 'S4', terminal: true, qBefore: 0, gamma: 0.99, alpha: 0.1, target: 10, tdError: 10, updated: 1, info: 'The agent receives a goal reward when reaching the terminal goal.' },
+      { state: 'S5', epsilon: 0.2, action: 'Right', reward: 10, nextState: 'S5', terminal: true, qBefore: 0, gamma: 0.99, alpha: 0.1, target: 10, tdError: 10, updated: 1, info: 'A successful terminal outcome gives the maximum positive reward.' }
+    ];
+
+    const qTableStateNames = ['S0', 'S1', 'S2', 'S3', 'S4', 'S5'];
+    const qTable = {
+      S0: { Up: 0, Down: 0, Left: 0, Right: 0 },
+      S1: { Up: 0, Down: 0, Left: 0, Right: 0 },
+      S2: { Up: 0, Down: 0, Left: 0, Right: 0 },
+      S3: { Up: 0, Down: 0, Left: 0, Right: 0 },
+      S4: { Up: 0, Down: 0, Left: 0, Right: 0 },
+      S5: { Up: 0, Down: 0, Left: 0, Right: 0 },
+    };
+
+    let stepIndex = 0;
+    let currentState = 'S0';
+    const actionOrder = ['Up', 'Down', 'Left', 'Right'];
+    const mazeGrid = document.getElementById('maze-grid');
+    const simStatus = document.getElementById('sim-status');
+    const tdFormula = document.getElementById('td-formula');
+    const tdSummary = document.getElementById('td-summary');
+    const qTableElement = document.getElementById('q-sim-table');
+
+    function epsilonGreedyAction(state) {
+      const legalActions = actionOrder;
+      const bestValue = Math.max(...legalActions.map((action) => qTable[state][action] ?? 0));
+      const bestActions = legalActions.filter((action) => (qTable[state][action] ?? 0) === bestValue);
+
+      if (Math.random() < 0.2) {
+        return legalActions[Math.floor(Math.random() * legalActions.length)];
+      }
+
+      return bestActions[Math.floor(Math.random() * bestActions.length)];
+    }
+
+    function getStepForStateAction(state, action) {
+      return qSteps.find((step) => step.state === state && step.action === action) || {
+        state,
+        action,
+        reward: 0,
+        nextState: state,
+        terminal: false,
+        qBefore: qTable[state][action] ?? 0,
+        gamma: 0.99,
+        alpha: 0.1,
+        info: 'This action was chosen by the epsilon-greedy policy.'
+      };
+    }
+
+    function buildMaze() {
+      const cells = [
+        { label: 'Start', state: 'S0', type: 'start' },
+        { label: 'Small cheese', state: 'S1', type: 'cheese' },
+        { label: 'Empty', state: 'S2', type: 'empty' },
+        { label: 'Empty', state: 'S3', type: 'empty' },
+        { label: 'Poison', state: 'S4', type: 'poison' },
+        { label: 'Big cheese', state: 'S5', type: 'goal' },
+      ];
+      const activeState = currentState;
+      mazeGrid.innerHTML = cells.map((cell) => {
+        const isActive = cell.state === activeState;
+        const color = cell.type === 'start' ? '#e0f2fe' : cell.type === 'cheese' ? '#dcfce7' : cell.type === 'goal' ? '#fef3c7' : cell.type === 'poison' ? '#fee2e2' : '#f8fafc';
+        const border = isActive ? '2px solid #4a6df7' : '1px solid rgba(17,24,39,0.08)';
+        return `<div style="display:grid;place-items:center;min-height:58px;padding:8px;border-radius:10px;background:${color};border:${border};font-size:11px;color:#1f2937;text-align:center;">${cell.label}</div>`;
+      }).join('');
+    }
+
+    function renderQTable() {
+      const headers = ['State', 'Up', 'Down', 'Left', 'Right'];
+      const stateRows = Object.keys(qTable).map((state) => [
+        state,
+        qTable[state]?.Up ?? 0,
+        qTable[state]?.Down ?? 0,
+        qTable[state]?.Left ?? 0,
+        qTable[state]?.Right ?? 0,
+      ]);
+
+      qTableElement.innerHTML = [headers, ...stateRows].map((row, rowIndex) => {
+        const cells = row.map((cell, colIndex) => {
+          if (rowIndex === 0) {
+            return `<th style="padding:8px 10px; background:#eef3ff; text-align:center;">${cell}</th>`;
+          }
+
+          const value = colIndex === 0 ? cell : (Number.isFinite(Number(cell)) ? Number(cell).toFixed(2) : '0.00');
+          return `<td style="padding:8px 10px; border:1px solid rgba(17,24,39,0.08); text-align:center;">${value}</td>`;
+        }).join('');
+        return `<tr>${cells}</tr>`;
+      }).join('');
+    }
+
+    function renderStep() {
+      buildMaze();
+      const chosenAction = epsilonGreedyAction(currentState);
+      const step = getStepForStateAction(currentState, chosenAction);
+      const qBefore = qTable[currentState][chosenAction] ?? 0;
+      const nextStateValues = qTable[step.nextState] ?? { Up: 0, Down: 0, Left: 0, Right: 0 };
+      const bestNextValue = Math.max(...Object.values(nextStateValues));
+      const target = step.reward + step.gamma * bestNextValue;
+      const tdError = target - qBefore;
+      const updatedQ = qBefore + step.alpha * tdError;
+
+      qTable[currentState][chosenAction] = updatedQ;
+
+      simStatus.innerHTML = `
+        <strong>Step ${stepIndex + 1}</strong><br>
+        Current state: <strong>${currentState}</strong><br>
+        Epsilon: <strong>0.20</strong><br>
+        Action chosen: <strong>${chosenAction}</strong><br>
+        Reward: <strong>${step.reward}</strong><br>
+        Next state: <strong>${step.nextState}</strong><br>
+        Best next-state value: <strong>${bestNextValue.toFixed(2)}</strong><br>
+        <span style="color:#1e9d62; font-weight:700;">Q before update = ${qBefore.toFixed(2)}</span>
+      `;
+
+      const targetValue = step.reward + step.gamma * bestNextValue;
+      tdFormulas = `Q(${currentState}, ${chosenAction}) ← ${qBefore.toFixed(2)} + ${step.alpha.toFixed(2)} [${step.reward} + ${step.gamma.toFixed(2)} × max Q(${step.nextState}, a') - ${qBefore.toFixed(2)}]`;
+      tdFormula.innerHTML = tdFormulas;
+      tdSummary.innerHTML = `
+        <strong>TD target</strong> = <strong>${targetValue.toFixed(2)}</strong><br>
+        <strong>TD error</strong> = target − current = <strong>${tdError.toFixed(2)}</strong><br>
+        <strong>Updated Q</strong> = <strong>${updatedQ.toFixed(2)}</strong><br>
+        <em>${step.info}</em>
+      `;
+
+      currentState = step.terminal ? 'S0' : step.nextState;
+      renderQTable();
+    }
+
+    document.getElementById('q-step-btn').addEventListener('click', () => {
+      renderStep();
+      stepIndex += 1;
+    });
+
+    document.getElementById('q-reset-btn').addEventListener('click', () => {
+      stepIndex = 0;
+      currentState = 'S0';
+      Object.keys(qTable).forEach((state) => {
+        Object.keys(qTable[state]).forEach((action) => {
+          qTable[state][action] = 0;
+        });
+      });
+      simStatus.innerHTML = '<strong>Reset complete.</strong><br>Choose the next action to continue training.';
+      tdFormula.innerHTML = 'Q(s, a) ← Q(s, a) + α [r + γ max_{a\' } Q(s\', a\') - Q(s, a)]';
+      tdSummary.innerHTML = 'The Q-table starts at zero, so each action must be learned through experience.';
+      renderQTable();
+      buildMaze();
+    });
+
+    renderQTable();
+    buildMaze();
+    simStatus.innerHTML = '<strong>Ready to start.</strong><br>Press “Next step” to see the first Q-learning update.';
+    tdSummary.innerHTML = 'The Q-table starts at zero. Each experience updates the estimate using the TD target and the observed reward.';
+  </script>
+</body>
+</html>
