@@ -1,0 +1,9 @@
+gymnasium
+pygame
+numpy
+pyvirtualdisplay
+pyyaml
+imageio
+imageio_ffmpeg
+pyglet==1.5.1
+tqdm
