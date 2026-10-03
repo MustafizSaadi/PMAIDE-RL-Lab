@@ -336,6 +336,7 @@
       <button class="nav-btn" data-panel="bellman">🧠 Bellman Equation</button>
       <button class="nav-btn" data-panel="td">⚡ TD Learning</button>
       <button class="nav-btn" data-panel="recap">📝 Q-Learning Recap</button>
+      <button class="nav-btn" data-panel="sarsa">⚖️ SARSA VS Q-Learning</button>
       <div class="sidebar-section">Lab</div>
       <button class="nav-btn" data-panel="simulation">🎮 Q-Learning Simulation</button>
       <button class="nav-btn" data-panel="implementation">💻 Q-Learning Implementation</button>
@@ -667,6 +668,147 @@ For each episode:
             In short, Q-learning learns from experience by repeatedly updating state-action values. Through enough exploration and learning, the agent eventually discovers which actions
             maximize long-term reward and acts accordingly.
           </p>
+        </div>
+      </section>
+
+      <section class="panel" id="panel-sarsa">
+        <div class="section-box">
+          <div class="section-title">SARSA VS Q-Learning</div>
+
+          <p>
+            <strong>SARSA (State-Action-Reward-State-Action)</strong> is an <strong>on-policy</strong>, <strong>model-free</strong> Reinforcement Learning (RL) algorithm used to learn the value of actions in a Markov Decision Process (MDP).
+            Its name directly reflects the 5-tuple experience sequence used in its update rule:
+          </p>
+
+          <div class="formula-box">
+            (S<sub>t</sub>, A<sub>t</sub>, R<sub>t+1</sub>, S<sub>t+1</sub>, A<sub>t+1</sub>)
+          </div>
+
+          <p style="margin-top:10px;">
+            <strong>On-policy vs. off-policy (SARSA vs. Q-Learning):</strong> The defining feature of SARSA is that it is <strong>on-policy</strong>. It updates its <strong>Q</strong>-value based on the action actually taken
+            (<strong>A<sub>t+1</sub></strong>), including exploratory or suboptimal moves. In contrast, Q-Learning is <strong>off-policy</strong> because it updates assuming the best possible future action
+            (<strong>max<sub>a</sub> Q(S<sub>t+1</sub>, a)</strong>) is taken regardless of what the agent actually chooses next.
+          </p>
+
+          <table class="table" aria-label="SARSA vs Q-learning comparison">
+            <thead>
+              <tr>
+                <th>Feature</th>
+                <th>SARSA (On-Policy)</th>
+                <th>Q-Learning (Off-Policy)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Target Update</strong></td>
+                <td>R<sub>t+1</sub> + γQ(S<sub>t+1</sub>, A<sub>t+1</sub>)</td>
+                <td>R<sub>t+1</sub> + γ max<sub>a</sub> Q(S<sub>t+1</sub>, a)</td>
+              </tr>
+              <tr>
+                <td><strong>Policy Assumed</strong></td>
+                <td>Current exploration policy (includes randomness and mistakes)</td>
+                <td>Optimal target policy (greedy choice)</td>
+              </tr>
+              <tr>
+                <td><strong>Risk Profile</strong></td>
+                <td>Safer / Conservative in risky environments with penalties</td>
+                <td>Aggressive / Optimistic, assumes flawless future execution</td>
+              </tr>
+              <tr>
+                <td><strong>Convergence Speed</strong></td>
+                <td>Slower in some settings because it includes exploratory penalties</td>
+                <td>Faster in many cases because it targets the best possible future value</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="section-box" style="margin-top:16px; background:rgba(14,17,22,0.02); border-color:var(--border);">
+            <div class="section-title">Why SARSA is often preferred</div>
+            <ul style="margin-left:22px; padding:0;">
+              <li><strong>Safe exploration:</strong> It accounts for exploratory mistakes in environments with penalizing states.</li>
+              <li><strong>Practical safety:</strong> It is often preferred when safety, risk reduction, and real online performance during learning matter more than finding the shortest theoretical path.</li>
+            </ul>
+          </div>
+
+          <p style="margin-top:12px;">
+            It is worth clarifying that SARSA still aims to learn an optimal policy, but it optimizes for the actual operating environment, which includes the fact that the agent occasionally makes exploratory mistakes or encounters unexpected noise.
+          </p>
+
+          <div class="section-box" style="margin-top:16px; background:rgba(74,109,247,0.03); border-color:rgba(74,109,247,0.18);">
+            <div class="section-title">Why SARSA works better in risky settings</div>
+            <p>
+              Q-Learning assumes the agent will act flawlessly in the future (<strong>max<sub>a</sub> Q(S', a)</strong>). If taking a step next to a hazard offers a huge reward, Q-Learning chooses it even if a slight mistake or exploratory step will drop the agent into catastrophic failure.
+            </p>
+            <p>
+              SARSA factors in the actual action (<strong>A'</strong>) chosen by the current policy. Because the agent occasionally explores with an <strong>ε-greedy</strong> policy, it may randomly pick a dangerous action. SARSA therefore learns that being close to hazards is dangerous during training and automatically learns a safer buffer path.
+            </p>
+            <p>
+              In stochastic environments—especially where mistakes carry high penalties—SARSA consistently outperforms Q-learning during online execution.
+            </p>
+          </div>
+
+          <table class="table" aria-label="Policy target realism comparison" style="margin-top:16px;">
+            <thead>
+              <tr>
+                <th>Policy Target</th>
+                <th>Theoretical Maximum Yield</th>
+                <th>Practical Expected Value</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Q-Learning</strong></td>
+                <td>Highest optimistic value under ideal behavior</td>
+                <td>Can be lower in real risky settings because exploration may trigger penalties</td>
+              </tr>
+              <tr>
+                <td><strong>SARSA</strong></td>
+                <td>More conservative theoretical optimum</td>
+                <td>Higher practical expected value when mistakes are costly</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="section-box" style="margin-top:16px; background:rgba(14,17,22,0.02); border-color:var(--border);">
+            <div class="section-title">Concrete example: autonomous robot delivery in a warehouse</div>
+            <p>
+              Imagine an autonomous delivery robot carrying fragile glass components through a busy manufacturing warehouse.
+            </p>
+
+            <p><strong>The scenario</strong></p>
+            <ul style="margin-left:22px; padding:0;">
+              <li><strong>Shortest path (ledge):</strong> A narrow path right along the edge of an open maintenance pit.</li>
+              <li><strong>Reward:</strong> +100 for fast delivery.</li>
+              <li><strong>Hazard:</strong> Falling into the pit costs -1000 and destroys the robot.</li>
+              <li><strong>Safer path (main hallway):</strong> A slightly longer path around the safe central corridor.</li>
+              <li><strong>Reward:</strong> +90 for fast delivery, taking 2 extra seconds.</li>
+            </ul>
+
+            <p style="margin-top:10px;"><strong>Q-Learning (Off-Policy):</strong></p>
+            <p>
+              It learns that the narrow ledge is theoretically fastest and assigns it the highest value because <strong>max<sub>a</sub> Q(S', a)</strong> assumes the robot will never make a mistake.
+              In practice, during training or under slight sensor noise, the random exploration chance causes the robot to misstep off the ledge, triggering severe penalties and physically damaging the equipment.
+            </p>
+
+            <p><strong>SARSA (On-Policy):</strong></p>
+            <p>
+              Because SARSA evaluates <strong>Q(S', A')</strong>, it accounts for the chance that the robot might choose a risky exploratory action into the pit. The huge negative penalty (<strong>-1000</strong>) drags down the expected value of being anywhere near the ledge.
+              It therefore learns that the ledge is too dangerous under real operating conditions and steers the robot through the wider safe hallway, delivering goods consistently without destroying hardware.
+            </p>
+          </div>
+
+          <div style="margin-top:18px;">
+            <img src="SARSA VS Q-Learning example.jpeg" alt="SARSA vs Q-Learning example" style="width:100%; max-width:760px; display:block; margin:0 auto; border:1px solid var(--border); border-radius:12px; background:#fff;" />
+          </div>
+
+          <div class="section-box" style="margin-top:16px; background:rgba(14,17,22,0.02); border-color:var(--border);">
+            <div class="section-title">Real-world domains where SARSA is preferred</div>
+            <ul style="margin-left:22px; padding:0;">
+              <li><strong>Robotics and physical systems:</strong> Preventing mechanical wear, motor burnout, or hardware crashes during live trial-and-error training.</li>
+              <li><strong>Industrial process control / chemical plants:</strong> Preventing sudden spikes into dangerous temperature or pressure zones during optimization.</li>
+              <li><strong>Autonomous driving:</strong> Keeping a comfortable safety buffer away from lane edges or tight traffic gaps.</li>
+            </ul>
+          </div>
         </div>
       </section>
 
