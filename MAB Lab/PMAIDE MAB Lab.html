@@ -1,8 +1,6 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<html lang="en"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PMAIDE RL Lab 1</title>
   <style>
     :root {
@@ -139,7 +137,8 @@
       min-width: 0;
       overflow-y: auto;
       overflow-x: hidden;
-      padding: 18px 22px 18px;
+      /* padding: 18px 22px 18px; */
+      align-items: flex-start; /* Ensures content aligns to the top */
     }
 
     .panel {
@@ -150,8 +149,14 @@
     .panel.active {
       display: block;
       height: auto;
+      width: 100%;
       max-width: 980px;
-      margin: 0 auto;
+      margin: 0 auto; /* Keeps panel horizontally centered and aligned top */
+    }
+
+    /* Removes top whitespace from the top-most box on any tab */
+    .panel > :first-child {
+      margin-top: 0 !important;
     }
 
     .hero {
@@ -543,15 +548,15 @@
     }
 
     .lab-box h3 {
-      font-size: 14px;
+      font-size: 18px;
       margin-bottom: 8px;
       color: var(--text);
     }
 
     .lab-box p, .lab-box li {
       color: var(--text2);
-      font-size: 12px;
-      line-height: 1.7;
+      font-size: 15px;
+      line-height: 1.8;
     }
 
     .task-card {
@@ -587,13 +592,19 @@
 
     .task-head strong {
       flex: 1;
-      font-size: 13px;
+      font-size: 15px;
       color: var(--text);
     }
 
     .task-body {
       display: block;
       padding: 12px 14px 14px;
+    }
+
+    .task-body p {
+      font-size: 15px;
+      line-height: 1.8;
+      color: var(--text2);
     }
 
     .task-body.hidden { display: none; }
@@ -608,7 +619,7 @@
       border: 1px solid rgba(255,255,255,0.08);
       border-radius: 10px;
       font-family: var(--mono);
-      font-size: 12px;
+      font-size: 13px;
       line-height: 1.7;
       outline: none;
     }
@@ -678,10 +689,10 @@
     <div class="logo">RL</div>
     <div>
       <h1>Reinforcement Learning Lab</h1>
-      <p>Multi-Armed Bandit &middot; Exploration vs Exploitation</p>
+      <p>Multi-Armed Bandit · Exploration vs Exploitation</p>
     </div>
     <div class="header-meta">
-      <div><strong>PMAIDE RL Lab 1</strong> &middot; CSE902</div>
+      <div><strong>PMAIDE RL Lab 1</strong> · CSE908</div>
       <div>Topic: Multi-Armed Bandit</div>
     </div>
   </header>
@@ -710,7 +721,7 @@
             </ul>
           </div>
           <div style="margin-top:18px; text-align:center;">
-            <img src="./MAB-illustration.png" alt="Multi-armed bandit slot machine illustration" style="max-width:100%; height:auto; border-radius:12px; border:1px solid rgba(17,24,39,0.12); background:#fff; box-shadow:0 8px 20px rgba(0,0,0,0.06);" />
+            <img src="./MAB-illustration.png" alt="Multi-armed bandit slot machine illustration" style="max-width:100%; height:auto; border-radius:12px; border:1px solid rgba(17,24,39,0.12); background:#fff; box-shadow:0 8px 20px rgba(0,0,0,0.06);">
           </div>
         </div>
 
@@ -778,17 +789,14 @@
           <div style="color:var(--text2); font-size:16px; line-height:1.8;">
             <ul style="margin-left:22px; padding:0;">
               <li><strong>True value:</strong> The true value of an action a is the mean reward received when action a is selected.</li>
-              <li><strong>Estimated value:</strong> If action a has been selected N_t(a) times by time t, yielding rewards R_1, R_2, ..., R_{N_t(a)}, then the estimated value is Q_t(a) = (R_1 + R_2 + ... + R_{N_t(a)}) / N_t(a).</li>
+              <li><strong>Estimated value:</strong> <br><img src="./mean_function.png" alt="Estimated Value Formula"></li>
               <li>If N_t(a) = 0, then we define Q_t(a) as a default value, such as Q_t(a) = 0.</li>
               <li>As N_t(a) → ∞, by the law of large numbers, Q_t(a) converges to the true value of the action.</li>
             </ul>
           </div>
         </div>
-          </div>
-        </div>
       </section>
-
-      <section class="panel" id="panel-code">
+      <section class="panel" id="panel-code" >
         <div class="section-box">
           <div class="section-title">10-Armed Bandit Problem</div>
           <div style="margin-bottom:16px;">
@@ -874,7 +882,8 @@ class Bandit(object):
 
             <div style="font-size:11px; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; color:var(--text3); margin-top:14px; margin-bottom:8px;">Mathematical Formulation</div>
             <p style="font-size:15px; color:var(--text2); line-height:1.8; margin-bottom:8px;"><strong>Incremental Update Formula:</strong></p>
-            <p style="font-size:15px; color:var(--text2); line-height:1.8; margin-bottom:8px;">The estimated reward for arm a is updated as:<br>q_estimates[a] = q_estimates[a] + (reward - q_estimates[a]) / action_counts[a]</p>
+            <p style="font-size:15px; color:var(--text2); line-height:1.8; margin-bottom:8px;">The estimated reward for arm a is updated as:<br>q_estimates[a] = q_estimates[a] + (reward - q_estimates[a]) / action_counts[a]
+            <br><img src="./inc update impl.png" alt="Mathematical Formula"><br><img src="./inc update generalized.png" alt="Generalized Incremental Update Formula"></p>
             <p style="font-size:15px; color:var(--text2); line-height:1.8; margin-bottom:8px;"><strong>Action Selection:</strong></p>
             <ol style="margin-left:22px; color:var(--text2); font-size:15px; line-height:1.8;">
               <li>Exploitation: action = argmax(q_estimates)</li>
@@ -1265,7 +1274,26 @@ PlayUCBEpsilon(n_games=<span class="code-key">2000</span>, arms=<span class="cod
 
             <div class="side-panel" style="height:auto;">
               <h3>Machine stats</h3>
-              <div class="metrics" id="statsPanel"></div>
+              <div class="metrics" id="statsPanel"><div class="true-mean-box">
+        <div class="true-mean-title">True mean</div>
+        <div class="true-mean-row"><span>A1</span><strong>q* = 0.75</strong></div><div class="true-mean-row"><span>A2</span><strong>q* = 0.70</strong></div><div class="true-mean-row"><span>A3</span><strong>q* = 0.95</strong></div>
+      </div><div class="metric-row">
+          <span><span class="arm-badge ">A1</span></span>
+          <strong>0.00</strong>
+          <span>0 pulls</span>
+        </div><div class="metric-row">
+          <span><span class="arm-badge ">A2</span></span>
+          <strong>0.00</strong>
+          <span>0 pulls</span>
+        </div><div class="metric-row">
+          <span><span class="arm-badge ">A3</span></span>
+          <strong>0.00</strong>
+          <span>0 pulls</span>
+        </div><div class="metric-row">
+        <span>Total reward</span>
+        <strong>0</strong>
+        <span>0/20 steps</span>
+      </div></div>
             </div>
           </div>
 
@@ -1274,59 +1302,80 @@ PlayUCBEpsilon(n_games=<span class="code-key">2000</span>, arms=<span class="cod
 
       <section class="panel" id="panel-lab">
         <div class="lab-box">
-          <h3>Lab objective</h3>
+          <h3>Lab Task: N-Armed Bandit for a Realistic Recommendation System</h3>
           <p>
-            Simulate a multi-armed bandit problem and compare how different algorithms balance exploration and exploitation.
-            Your goal is to understand why a simple greedy policy can get stuck on a mediocre arm, while uncertainty-aware methods can discover better arms more efficiently.
+            A digital recommendation platform must choose among several possible actions for each user visit. The system does not know which item is best in advance, so it must learn from feedback while balancing exploration and exploitation.
+          </p>
+        </div>
+
+        <div class="lab-box">
+          <div class="section-title">Problem statement</div>
+          <p>
+            You are given an online recommendation system that can recommend one item from a set of K candidate products, articles, or services to each user. Each recommendation produces a reward such as click, purchase, engagement, or abandonment. The true quality of each recommendation is unknown at first, and the system must learn which options are best over time.
+          </p>
+          <p style="margin-top:10px;">
+            <b>Output the top 5 recommendations after considering amount of exploration and exploitation.</b>
           </p>
         </div>
 
         <div class="task-card">
           <div class="task-head" data-task="task1">
             <div class="task-no">1</div>
-            <strong>Implement a bandit environment</strong>
+            <strong>Model the problem as an n-armed bandit</strong>
           </div>
           <div class="task-body">
-            <p>Write a Bernoulli reward function where each arm has a different success probability. The system should return 1 for a win and 0 for a loss.</p>
-            <textarea spellcheck="false"># Task 1: create the bandit environment
-import random
+            <p>Define the arms as different recommendation options and the reward as user feedback such as click = 1, no click = 0, purchase = 2, or abandonment = -1. Considering all these effects, assume recommendation will have a true value <strong>q(a)*</strong> sampled from a Gaussian distribution with mean 0 and variance 1. Rewards for selecting an arm <strong>a</strong> (recommendation) will be sampled from a Gaussian distribution with mean <strong>q(a)*</strong> and variance 1.</p>
+            <textarea spellcheck="false"># Task 1: Model the recommendation system as an n-armed bandit
+# Example idea: each arm = a recommended item
+# Reward = click, purchase, engagement, or no interaction
 
-arm_probabilities = [0.10, 0.35, 0.70, 0.55]
+import numpy as np
 
-def pull_arm(arm_index):
-    # Return 1 if the arm wins, otherwise 0
-    pass
+n_arms = 10
+q_star = np.random.normal(0, 1, n_arms)  # true action values
 
-for arm in range(len(arm_probabilities)):
-    print(f"Arm {arm}: {pull_arm(arm)}")</textarea>
-            <div class="lab-actions">
-              <button class="btn primary">Check answer</button>
-              <button class="btn">Show hint</button>
-            </div>
-            <div class="result-box" id="result1">Expected logic: sample a random number and compare it to the arm's probability.</div>
+# Write your code here to simulate pulling an arm and returning a reward
+# Example: reward = np.random.normal(self.q_star[action], 1)  # rewards sampled from N(q*(a), 1)
+</textarea>
+            <div class="result-box" id="result1">Each arm should represent a candidate recommendation, and each pull should produce a reward based on that item's probability of success.</div>
           </div>
         </div>
 
         <div class="task-card">
           <div class="task-head" data-task="task2">
             <div class="task-no">2</div>
-            <strong>Compare ε-greedy and UCB</strong>
+            <strong>Implement and compare learning strategies</strong>
           </div>
           <div class="task-body hidden">
-            <p>Run the same bandit environment under two strategies: ε-greedy and UCB. Record cumulative reward after 2000 rounds and explain which one learns faster.</p>
-            <textarea spellcheck="false"># Task 2: compare two algorithms
-# Implement epsilon-greedy and UCB
-# Report the cumulative reward after 2000 rounds
+            <p>Implement at least one policy such as epsilon-greedy or UCB. More than one is welcomed! Compare it against the greedy baseline strategy and discuss which strategy learns faster in a recommendation context.</p>
+            <textarea spellcheck="false"># Task 2: Compare strategies such as epsilon-greedy and UCB
+# Implement your bandit policy and simulate user feedback over time
+# Compute cumulative reward and compare it with a greedy policy
 
-arm_probabilities = [0.05, 0.25, 0.70, 0.60]
-
-# Insert your code below
+# Example structure:
+# for each timestep:
+#     choose action
+#     observe reward
+#     update estimates
 </textarea>
-            <div class="lab-actions">
-              <button class="btn primary">Check answer</button>
-              <button class="btn">Show hint</button>
-            </div>
-            <div class="result-box" id="result2">Hint: UCB usually performs better in early rounds because it explores uncertain arms more intelligently.</div>
+            <div class="result-box" id="result2">UCB is useful when we need to explore uncertain arms while still exploiting strong performers.</div>
+          </div>
+        </div>
+
+        <div class="task-card">
+          <div class="task-head" data-task="task3">
+            <div class="task-no">3</div>
+            <strong>Write the report and submission</strong>
+          </div>
+          <div class="task-body hidden">
+            <p>Each student must submit the code and a <strong>two-page report</strong>. The report should summarize the objective, the recommendation setting, the chosen algorithm, the experiment, the result, and the conclusion.</p>
+            <ul style="margin: 10px 0 0 20px; color: var(--text2); line-height: 1.9;">
+              <li>Python code implementing the bandit simulation</li>
+              <li>Two-page report explaining the design and findings</li>
+              <li>Discussion of exploration vs exploitation in recommendation systems</li>
+              <li>Clear comparison between strategies and final takeaway</li>
+            </ul>
+            <div class="result-box" id="result3" style="margin-top:12px;">Deliverables: code + two-page report. Each student must submit both for grading.</div>
           </div>
         </div>
 
