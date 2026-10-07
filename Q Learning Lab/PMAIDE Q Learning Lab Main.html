@@ -320,11 +320,11 @@
     <div class="logo">Q</div>
     <div>
       <h1>Reinforcement Learning Lab</h1>
-      <p>Q-Learning &middot; Value-Based Methods</p>
+      <p>RL problem solving strategies</p>
     </div>
     <div class="header-meta">
-      <div><strong>PMAIDE Q Learning Lab 1</strong> &middot; CSE902</div>
-      <div>Topic: Q-Learning and MDPs</div>
+      <div><strong>PMAIDE MCTS & Q Learning Lab</strong> &middot; CSE908</div>
+      <div>Topic: MDP, Value Based Methods, MCTS, and Q-Learning </div>
     </div>
   </header>
 
@@ -334,11 +334,14 @@
       <button class="nav-btn active" data-panel="overview">📘 Overview</button>
       <button class="nav-btn" data-panel="value-based">📊 Value-Based Methods</button>
       <button class="nav-btn" data-panel="bellman">🧠 Bellman Equation</button>
+      <button class="nav-btn" data-panel="mc-vs-td">⚖️ Monte Carlo VS Temporal DIfference</button>
+      <button class="nav-btn" data-panel="mc-learning">🎲 Monte Carlo Learning</button>
       <button class="nav-btn" data-panel="td">⚡ TD Learning</button>
       <button class="nav-btn" data-panel="recap">📝 Q-Learning Recap</button>
       <button class="nav-btn" data-panel="sarsa">⚖️ SARSA VS Q-Learning</button>
       <div class="sidebar-section">Lab</div>
       <button class="nav-btn" data-panel="simulation">🎮 Q-Learning Simulation</button>
+      <button class="nav-btn" data-panel="mcts-simulation">🌲 MCTS Simulation</button>
       <button class="nav-btn" data-panel="implementation">💻 Q-Learning Implementation</button>
       <div class="sidebar-section">Resources</div>
       <button class="nav-btn" data-panel="references">📚 References</button>
@@ -534,6 +537,118 @@
             The optimal policy is the one that chooses actions with the highest value in every state. In practice, RL agents do not usually know the exact transition model, so
             they learn these values from samples gathered while interacting with the environment.
           </p>
+        </div>
+      </section>
+
+      <section class="panel" id="panel-mc-vs-td">
+        <div class="section-box">
+          <div class="section-title">Monte Carlo VS Temporal DIfference</div>
+          <p>
+            Remember that an RL agent learns by interacting with its environment. The idea is that given the experience and the received reward,
+            the agent will update its value function or policy.
+          </p>
+
+          <p style="margin-top:12px;">
+            <strong>Monte Carlo</strong> and <strong>Temporal Difference Learning</strong> are two different strategies on how to train our value function or our policy function.
+            Both of them use experience to solve the RL problem.
+          </p>
+
+          <p style="margin-top:12px;">
+            On one hand, <strong>Monte Carlo</strong> uses an entire episode of experience before learning. On the other hand,
+            <strong>Temporal Difference</strong> uses only a step <strong>(S<sub>t</sub>, A<sub>t</sub>, R<sub>t+1</sub>, S<sub>t+1</sub>)</strong> to learn.
+          </p>
+
+          <div class="section-box" style="margin-top:16px; background:rgba(14,17,22,0.02); border-color:var(--border);">
+            <div class="section-title">Key difference</div>
+            <ul style="margin-left:22px; padding:0;">
+              <li><strong>Monte Carlo:</strong> learns after the full episode is completed.</li>
+              <li><strong>Temporal Difference:</strong> learns immediately from each transition using the current experience.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" id="panel-mc-learning">
+        <div class="section-box">
+          <div class="section-title">Monte Carlo Learning</div>
+          <p><strong>Monte Carlo: learning at the end of the episode</strong></p>
+          <p style="margin-top:10px;">
+            <strong>Monte Carlo</strong> waits until the end of the episode, calculates <strong>G<sub>t</sub></strong> (return) and uses it as a target for updating
+            <strong>V(S<sub>t</sub>)</strong>.
+          </p>
+
+          <p style="margin-top:12px;">
+            So it requires a complete episode of interaction before updating our value function.
+          </p>
+
+          <div class="formula-box">
+            G_t = R_{t+1} + R_{t+2} + R_{t+3} + ...
+          </div>
+
+          <div class="section-box" style="margin-top:16px; background:rgba(14,17,22,0.02); border-color:var(--border);">
+            <div class="section-title">Monte Carlo</div>
+            <p>
+              We always start the episode at the same starting point.<br>
+              The agent takes actions using the policy. For instance, using an <strong>ε-greedy strategy</strong>, a policy that alternates between exploration (random actions) and exploitation.
+            </p>
+            <p style="margin-top:10px;">
+              We get the reward and the next state. We terminate the episode if the cat eats the mouse or if the mouse moves more than 10 steps.
+            </p>
+            <p style="margin-top:10px;">
+              At the end of the episode, we have a list of <strong>(state, action, reward, next_state)</strong> tuples, for example:
+              <strong>[[State tile 3 bottom, Go Left, +1, State tile 2 bottom], [State tile 2 bottom, Go Left, +0, State tile 1 bottom], ...]</strong>
+            </p>
+            <p style="margin-top:10px;">
+              The agent will sum the total rewards <strong>G<sub>t</sub></strong> to see how well it did. It will then update <strong>V(s<sub>t</sub>)</strong> based on the formula.
+            </p>
+          </div>
+
+          <div class="section-box" style="margin-top:16px; background:rgba(74,109,247,0.03); border-color:rgba(74,109,247,0.18);">
+            <div class="section-title">Update rule</div>
+            <div class="formula-box">
+              V(S_t) ← V(S_t) + lr × [G_t − V(S_t)]
+            </div>
+            <p style="margin-top:10px;">
+              Then start a new game with this new knowledge. By running more and more episodes, the agent will learn to play better and better.
+            </p>
+          </div>
+
+          <div class="section-box" style="margin-top:16px; background:rgba(14,17,22,0.02); border-color:var(--border);">
+            <div class="section-title">Example</div>
+            <p>
+              Suppose we train a state-value function using <strong>Monte Carlo</strong>.
+            </p>
+            <ul style="margin:10px 0 0 22px; padding:0;">
+              <li>We initialize our value function so that it returns <strong>0</strong> value for each state.</li>
+              <li>Our learning rate <strong>(lr)</strong> is <strong>0.1</strong>.</li>
+              <li>Our discount rate is <strong>1</strong> (so there is no discount).</li>
+              <li>The mouse explores the environment and takes random actions.</li>
+            </ul>
+            <p style="margin-top:10px;">
+              The mouse made more than 10 steps, so the episode ends.
+            </p>
+            <p style="margin-top:10px;">
+              We have a list of state, action, reward, next_state. We need to calculate the return:
+            </p>
+            <div class="formula-box">
+              G_t = R_{t+1} + R_{t+2} + R_{t+3} + ...
+            </div>
+            <div class="formula-box" style="margin-top:10px;">
+              G_0 = R_1 + R_2 + R_3 + ... = 1 + 0 + 0 + 0 + 0 + 0 + 1 + 1 + 0 + 0 = 3
+            </div>
+            <p style="margin-top:10px;">
+              We can now compute the new <strong>V(S<sub>0</sub>)</strong>:
+            </p>
+            <div class="formula-box">
+              V(S_0) = V(S_0) + lr × [G_0 − V(S_0)]
+            </div>
+            <div class="formula-box" style="margin-top:10px;">
+              V(S_0) = 0 + 0.1 × [3 − 0] = 0.3
+            </div>
+            <p style="margin-top:10px;">
+              After many episodes, the agent learns which states are better and updates its estimate of the value function accordingly.
+            </p>
+          </div>
         </div>
       </section>
 
@@ -849,6 +964,43 @@ For each episode:
         </div>
       </section>
 
+      <section class="panel" id="panel-mcts-simulation">
+        <div class="section-box">
+          <div class="section-title">Monte Carlo Tree Search simulation</div>
+          <p>
+            This simulation follows the <strong>Upper Confidence Tree (UCT)</strong> strategy used in Monte Carlo Tree Search. The agent repeatedly
+            <strong>selects</strong>, <strong>expands</strong>, <strong>simulates</strong>, and <strong>backs up</strong> values while balancing exploitation and exploration.
+          </p>
+
+          <div class="formula-box">
+            UCT(s, a) = Q(s, a) + c × √(ln N(s) / N(s, a))
+          </div>
+
+          <div style="display:flex; gap:10px; flex-wrap:wrap; margin:16px 0;">
+            <button id="mcts-step-btn" style="border:none; background:linear-gradient(135deg, var(--accent), var(--purple)); color:white; padding:10px 16px; border-radius:8px; font-weight:700; cursor:pointer;">Next rollout</button>
+            <button id="mcts-reset-btn" style="border:1px solid var(--border); background:var(--bg2); color:var(--text); padding:10px 16px; border-radius:8px; font-weight:600; cursor:pointer;">Reset</button>
+          </div>
+
+          <div style="display:grid; grid-template-columns: minmax(220px, 1.1fr) minmax(260px, 1.2fr); gap:12px; margin-top:12px;">
+            <div style="background:rgba(74,109,247,0.04); border:1px solid rgba(74,109,247,0.18); border-radius:12px; padding:12px;">
+              <div class="section-title" style="margin-bottom:8px;">Search tree</div>
+              <div id="mcts-tree" style="display:flex; flex-direction:column; gap:8px;"></div>
+            </div>
+
+            <div style="background:rgba(14,17,22,0.02); border:1px solid var(--border); border-radius:12px; padding:12px;">
+              <div class="section-title" style="margin-bottom:8px;">Current rollout</div>
+              <div id="mcts-status" style="font-size:15px; color:var(--text2); line-height:1.8;"></div>
+            </div>
+          </div>
+
+          <div id="mcts-summary" style="margin-top:12px; color:var(--text2); font-size:15px; line-height:1.8;"></div>
+
+          <div style="margin-top:16px; overflow-x:auto;">
+            <table class="table" id="mcts-table" aria-label="MCTS rollout table"></table>
+          </div>
+        </div>
+      </section>
+
       <section class="panel" id="panel-implementation">
         <div class="section-box">
           <div class="section-title">Lab notebooks</div>
@@ -898,9 +1050,15 @@ For each episode:
     const navButtons = document.querySelectorAll('.nav-btn');
     navButtons.forEach((btn) => {
       btn.addEventListener('click', () => {
+        const panel = btn.dataset.panel;
+
+        if (panel === 'mcts-simulation') {
+          window.location.href = './MCTS%20Simulation.html';
+          return;
+        }
+
         navButtons.forEach((b) => b.classList.remove('active'));
         btn.classList.add('active');
-        const panel = btn.dataset.panel;
         document.querySelectorAll('.panel').forEach((p) => p.classList.toggle('active', p.id === `panel-${panel}`));
       });
     });
@@ -1085,6 +1243,181 @@ For each episode:
     buildMaze();
     simStatus.innerHTML = '<strong>Ready to start.</strong><br>Press “Next step” to see the first Q-learning update.';
     tdSummary.innerHTML = 'The Q-table starts at zero. Each experience updates the estimate using the TD target and the observed reward.';
+
+    const mctsActions = ['Left', 'Center', 'Right'];
+    const mctsC = 1.4;
+    const mctsGamma = 0.9;
+
+    function createNode(label, parent = null, action = null) {
+      return {
+        label,
+        parent,
+        action,
+        children: [],
+        untried: [...mctsActions],
+        visits: 0,
+        totalValue: 0,
+        value: 0,
+      };
+    }
+
+    let mctsRoot = createNode('Root');
+    let mctsRolloutCount = 0;
+
+    function getRandomReward(action) {
+      const rewardMap = {
+        Left: [2, 0, -1, 3],
+        Center: [4, 1, -2, 2],
+        Right: [6, -1, 2, 5],
+      };
+      const options = rewardMap[action] || [0, 0, 0, 0];
+      return options[Math.floor(Math.random() * options.length)];
+    }
+
+    function randomRollout(depth = 0) {
+      if (depth >= 3) {
+        return 0;
+      }
+      const action = mctsActions[Math.floor(Math.random() * mctsActions.length)];
+      const immediateReward = getRandomReward(action);
+      return immediateReward + mctsGamma * randomRollout(depth + 1);
+    }
+
+    function selectBestChild(node) {
+      let bestNode = null;
+      let bestScore = -Infinity;
+      for (const child of node.children) {
+        const exploitation = child.totalValue / (child.visits || 1);
+        const exploration = mctsC * Math.sqrt(Math.log(node.visits || 1) / (child.visits || 1));
+        const score = exploitation + exploration;
+        if (score > bestScore) {
+          bestScore = score;
+          bestNode = child;
+        }
+      }
+      return bestNode;
+    }
+
+    function findUntriedAction(node) {
+      if (!node.untried.length) return null;
+      const action = node.untried.pop();
+      return action;
+    }
+
+    function backpropagate(node, result) {
+      let current = node;
+      let discounted = result;
+      while (current) {
+        current.visits += 1;
+        current.totalValue += discounted;
+        current.value = current.totalValue / current.visits;
+        discounted = discounted * mctsGamma;
+        current = current.parent;
+      }
+    }
+
+    function runOneMctsRollout() {
+      let node = mctsRoot;
+      let path = [node];
+
+      while (node.children.length && !node.untried.length) {
+        const best = selectBestChild(node);
+        if (!best) break;
+        node = best;
+        path.push(node);
+      }
+
+      const action = findUntriedAction(node);
+      if (action) {
+        const child = createNode(`${node.label} → ${action}`, node, action);
+        node.children.push(child);
+        path.push(child);
+        node = child;
+      }
+
+      const rollout = randomRollout();
+      const finalReturn = rollout;
+      backpropagate(node, finalReturn);
+      mctsRolloutCount += 1;
+
+      const bestAction = mctsRoot.children.reduce((best, child) => {
+        if (!best || child.visits > best.visits) return child;
+        return best;
+      }, null);
+
+      const bestActionName = bestAction ? bestAction.action : 'None';
+      const bestVisits = bestAction ? bestAction.visits : 0;
+
+      document.getElementById('mcts-status').innerHTML = `
+        <strong>Rollout ${mctsRolloutCount}</strong><br>
+        Selected node: <strong>${node.label}</strong><br>
+        Expansion: <strong>${action || 'No untried action left'}</strong><br>
+        Random rollout return: <strong>${finalReturn.toFixed(2)}</strong><br>
+        Estimated root choice: <strong>${bestActionName}</strong><br>
+        Visits: <strong>${bestVisits}</strong>
+      `;
+
+      const summary = `
+        <strong>Selection:</strong> choose the child with the highest UCT value.<br>
+        <strong>Expansion:</strong> add one untried action to the tree.<br>
+        <strong>Simulation:</strong> run a random playout to estimate the return.<br>
+        <strong>Backpropagation:</strong> update node values from the leaf back to the root.
+      `;
+      document.getElementById('mcts-summary').innerHTML = summary;
+      renderMctsTree();
+      renderMctsTable();
+    }
+
+    function renderMctsTree() {
+      const treeRoot = document.getElementById('mcts-tree');
+      const walk = (node, depth = 0) => {
+        const childHtml = node.children.map((child) => walk(child, depth + 1)).join('');
+        const nodeText = `${node.label} · N=${node.visits} · Q=${node.value.toFixed(2)}`;
+        return `
+          <div style="margin-left:${depth * 16}px; padding:8px 10px; border:1px solid rgba(17,24,39,0.08); border-radius:8px; background:${depth === 0 ? '#eef3ff' : '#f8fafc'}; font-size:13px; color:#1f2937;">
+            ${nodeText}
+          </div>
+          ${childHtml}
+        `;
+      };
+      treeRoot.innerHTML = walk(mctsRoot);
+    }
+
+    function renderMctsTable() {
+      const rows = [
+        ['Node', 'Visits', 'Average return', 'Action'],
+        ...mctsRoot.children.map((child) => [child.label, child.visits, child.value.toFixed(2), child.action])
+      ];
+
+      const table = document.getElementById('mcts-table');
+      table.innerHTML = rows.map((row, rowIndex) => {
+        const cells = row.map((cell, colIndex) => {
+          if (rowIndex === 0) {
+            return `<th style="padding:8px 10px; background:#eef3ff; text-align:center;">${cell}</th>`;
+          }
+          return `<td style="padding:8px 10px; border:1px solid rgba(17,24,39,0.08); text-align:center;">${cell}</td>`;
+        }).join('');
+        return `<tr>${cells}</tr>`;
+      }).join('');
+    }
+
+    document.getElementById('mcts-step-btn').addEventListener('click', () => {
+      runOneMctsRollout();
+    });
+
+    document.getElementById('mcts-reset-btn').addEventListener('click', () => {
+      mctsRoot = createNode('Root');
+      mctsRolloutCount = 0;
+      document.getElementById('mcts-status').innerHTML = '<strong>Reset complete.</strong><br>Press “Next rollout” to begin the MCTS search.';
+      document.getElementById('mcts-summary').innerHTML = 'The tree starts empty except for the root. Each rollout adds new information and improves the UCT estimates.';
+      renderMctsTree();
+      renderMctsTable();
+    });
+
+    renderMctsTree();
+    renderMctsTable();
+    document.getElementById('mcts-status').innerHTML = '<strong>Ready to start.</strong><br>Press “Next rollout” to see the first MCTS selection and expansion.';
+    document.getElementById('mcts-summary').innerHTML = 'The agent explores the search tree using the UCT formula, then updates each node with the simulated reward.';
   </script>
 </body>
 </html>
