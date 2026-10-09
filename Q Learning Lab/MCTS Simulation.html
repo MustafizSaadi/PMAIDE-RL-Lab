@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>MCTS Lab Visualizer — 2×3 Grid World</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --primary: #4f46e5;
+      --selection: #2563eb;
+      --expansion: #7c3aed;
+      --simulation: #059669;
+      --backprop: #ea580c;
+      --bg-card: #ffffff;
+      --border-color: #cbd5e1;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, -apple-system, sans-serif; background: #f8fafc; color: #0f172a; padding: 18px; line-height: 1.5; }
+
+    header { margin-bottom: 16px; text-align: center; }
+    header h1 { font-size: 22px; color: #0f172a; margin-bottom: 4px; }
+    header p { color: #64748b; font-size: 13.5px; }
+
+    .main-grid { display: grid; grid-template-columns: 380px 1fr; gap: 18px; max-width: 1480px; margin: 0 auto; }
+
+    .panel { background: var(--bg-card); border-radius: 10px; border: 1px solid var(--border-color); padding: 16px; box-shadow: 0 2px 5px rgba(0,0,0,0.04); }
+    .panel-title { font-size: 15px; font-weight: 700; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; color: #1e293b; }
+
+    /* Maze Grid */
+    .maze-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 6px; }
+    .cell {
+      aspect-ratio: 1.1; border-radius: 8px; border: 2px solid #94a3b8; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; font-weight: 600; font-size: 12px; position: relative;
+      transition: all 0.2s ease; background: #fff; text-align: center; padding: 4px;
+    }
+    .cell .state-tag { font-size: 13px; font-weight: 800; color: #334155; margin-bottom: 2px; }
+    .cell.start { background: #dbeafe; border-color: #3b82f6; }
+    .cell.small { background: #dcfce7; border-color: #22c55e; }
+    .cell.empty { background: #f1f5f9; border-color: #cbd5e1; }
+    .cell.poison { background: #ffe4e6; border-color: #f43f5e; }
+    .cell.big { background: #fef9c3; border-color: #eab308; }
+    .cell.agent-here { box-shadow: 0 0 0 4px #4f46e5; border-color: #4f46e5; transform: scale(1.03); }
+
+    .agent-badge {
+      position: absolute; top: 4px; right: 4px; background: #4f46e5; color: white; border-radius: 50%;
+      width: 18px; height: 18px; font-size: 10px; display: flex; align-items: center; justify-content: center; font-weight: bold;
+    }
+
+    /* Controls */
+    .btn-group { display: flex; gap: 6px; flex-wrap: wrap; }
+    button {
+      flex: 1; padding: 8px 10px; border: none; border-radius: 6px; font-weight: 600; font-size: 12px;
+      cursor: pointer; transition: all 0.15s; min-width: 75px;
+    }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-primary:hover { background: #4338ca; }
+    .btn-secondary { background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; }
+    .btn-secondary:hover { background: #e2e8f0; }
+    .btn-accent { background: #059669; color: white; }
+    .btn-accent:hover { background: #047857; }
+
+    .param-group { display: flex; justify-content: space-between; align-items: center; font-size: 12.5px; margin-top: 4px; }
+    .param-group input { width: 60px; padding: 3px 5px; border-radius: 4px; border: 1px solid #cbd5e1; text-align: center; font-size: 12px; }
+
+    /* Phase Badge */
+    .phase-badge {
+      display: inline-block; padding: 3px 8px; border-radius: 12px; font-size: 10.5px; font-weight: 700;
+      color: white; text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .phase-selection { background: var(--selection); }
+    .phase-expansion { background: var(--expansion); }
+    .phase-simulation { background: var(--simulation); }
+    .phase-backprop { background: var(--backprop); }
+    .phase-idle { background: #64748b; }
+
+    /* Mathematical Log Panel */
+    #logBox {
+      background: #0f172a; color: #f8fafc; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 12px; padding: 12px; border-radius: 6px; height: 210px; overflow-y: auto; margin-top: 8px; line-height: 1.6;
+    }
+    .math-line { margin-bottom: 6px; border-bottom: 1px dashed #334155; padding-bottom: 4px; }
+    .math-line b { color: #38bdf8; }
+    .math-line .highlight { color: #4ade80; font-weight: bold; }
+
+    /* SVG Tree Panel */
+    svg#treeSVG { width: 100%; height: 500px; background: #fafafa; border-radius: 8px; border: 1px solid #f1f5f9; }
+    
+    /* Node Styling */
+    .node { cursor: pointer; }
+    .node circle { fill: #ffffff; stroke: #475569; stroke-width: 2px; transition: all 0.2s; }
+    .node:hover circle { stroke: #4f46e5; stroke-width: 3px; }
+    .node.selected circle { stroke: #4f46e5; stroke-width: 4px; fill: #eef2ff; }
+    .node.selection circle { stroke: var(--selection); stroke-width: 3.5px; fill: #eff6ff; }
+    .node.expansion circle { stroke: var(--expansion); stroke-width: 3.5px; fill: #f5f3ff; }
+    .node.simulation circle { stroke: var(--simulation); stroke-width: 3.5px; fill: #ecfdf5; }
+    .node.backprop circle { stroke: var(--backprop); stroke-width: 3.5px; fill: #fff7ed; }
+    
+    .node text { text-anchor: middle; dominant-baseline: middle; pointer-events: none; }
+    .node .text-state { font-size: 13px; font-weight: 800; fill: #0f172a; }
+    .node .text-cell { font-size: 10.5px; font-weight: 600; fill: #475569; }
+    .node .text-stats { font-size: 11px; font-weight: 700; fill: #1e1b4b; }
+
+    .link { stroke: #94a3b8; stroke-width: 2px; fill: none; transition: stroke 0.2s; }
+    .link.active { stroke: var(--primary); stroke-width: 3.5px; }
+
+    /* Table */
+    table.data-table { width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 12px; }
+    table.data-table th, table.data-table td { padding: 7px 8px; text-align: center; border-bottom: 1px solid #e2e8f0; }
+    table.data-table th { background: #f8fafc; font-weight: 600; color: #475569; }
+    .highlight-row { background: #ecfdf5; font-weight: bold; color: #065f46; }
+
+    .mapping-banner {
+      background: #e0e7ff; color: #3730a3; padding: 6px 10px; border-radius: 6px; font-size: 11.5px;
+      font-weight: 600; margin-bottom: 8px; display: flex; flex-wrap: wrap; gap: 12px; justify-content: center;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Interactive MCTS Lab Visualizer</h1>
+    <p>Step-by-step Monte Carlo Tree Search with explicit mathematical calculations</p>
+  </header>
+
+  <div class="main-grid">
+    <!-- Left Column -->
+    <div style="display: flex; flex-direction: column; gap: 14px;">
+      
+      <!-- Maze World Panel -->
+      <div class="panel">
+        <div class="panel-title">
+          <span>Maze World (State Map)</span>
+          <span id="phaseBadge" class="phase-badge phase-idle">IDLE</span>
+        </div>
+        <div class="maze-grid" id="mazeGrid"></div>
+      </div>
+
+      <!-- Controls Panel -->
+      <div class="panel">
+        <div class="panel-title">MCTS Lab Controls</div>
+        <div class="btn-group">
+          <button id="stepBtn" class="btn-primary">Step Phase</button>
+          <button id="rolloutBtn" class="btn-secondary">1 Rollout</button>
+          <button id="run10Btn" class="btn-accent">Run 10 Rollouts</button>
+          <button id="autoBtn" class="btn-secondary">Auto Play</button>
+          <button id="resetBtn" class="btn-secondary" style="color: #ef4444;">Reset</button>
+        </div>
+
+        <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 4px;">
+          <div class="param-group">
+            <label for="paramC">Exploration Constant (C):</label>
+            <input type="number" id="paramC" value="1.414" step="0.1" min="0" />
+          </div>
+          <div class="param-group">
+            <label for="paramGamma">Discount Factor (&gamma;):</label>
+            <input type="number" id="paramGamma" value="0.9" step="0.05" min="0" max="1" />
+          </div>
+        </div>
+
+        <div style="margin-top: 10px; font-size: 12.5px; color: #475569; display: flex; justify-content: space-between;">
+          <span>Total Rollouts: <strong id="rolloutCount">0</strong></span>
+          <span>Optimal Action: <strong id="optimalActionDisplay" style="color: #059669;">Searching...</strong></span>
+        </div>
+      </div>
+
+      <!-- Mathematical Calculation Output Panel -->
+      <div class="panel">
+        <div class="panel-title">Mathematical Calculation Breakdown</div>
+        <div id="logBox">
+          <div class="math-line">Welcome to MCTS Lab!</div>
+          <div class="math-line">Click <b>Step Phase</b> or <b>1 Rollout</b> to generate exact numerical calculations.</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Right Column -->
+    <div style="display: flex; flex-direction: column; gap: 14px;">
+      
+      <!-- SVG Tree Visualizer -->
+      <div class="panel">
+        <div class="panel-title">
+          <span>Search Tree Visualization (with N & Q)</span>
+          <span style="font-size: 11px; font-weight: normal; color: #64748b;">Click any node to inspect child actions</span>
+        </div>
+        <svg id="treeSVG" viewBox="0 0 920 480" preserveAspectRatio="xMidYMid meet"></svg>
+      </div>
+
+      <!-- Action Table for Selected Node -->
+      <div class="panel">
+        <div class="mapping-banner">
+          <span>cell (0,0) → S0</span>
+          <span>cell (0,1) → S1</span>
+          <span>cell (0,2) → S2</span>
+          <span>cell (1,0) → S3</span>
+          <span>cell (1,1) → S4</span>
+          <span>cell (1,2) → S5</span>
+        </div>
+
+        <div class="panel-title">
+          <span>Child Actions & UCB Values for Node: <strong id="selectedNodeTitle" style="color: #4f46e5;">S0 (0,0)</strong></span>
+        </div>
+        <table class="data-table" id="actionTable">
+          <thead>
+            <tr>
+              <th>Action</th>
+              <th>Target State</th>
+              <th>Target Cell</th>
+              <th>Visits (N)</th>
+              <th>Total Reward (W)</th>
+              <th>Mean Value (Q)</th>
+              <th>UCB1 Score / Expression</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td colspan="7" style="color: #94a3b8;">No actions expanded for this node yet</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // --- STATE & MAZE MAP DEFINITIONS ---
+    const MAZE = [
+      [
+        { r: 0, c: 0, name: 'S0', label: 'Start\n(0,0)', type: 'start', reward: 0, isTerminal: false },
+        { r: 0, c: 1, name: 'S1', label: 'Small Cheese\n(+1)', type: 'small', reward: 1, isTerminal: false },
+        { r: 0, c: 2, name: 'S2', label: 'Empty\n(0)', type: 'empty', reward: 0, isTerminal: false }
+      ],
+      [
+        { r: 1, c: 0, name: 'S3', label: 'Empty\n(0)', type: 'empty', reward: 0, isTerminal: false },
+        { r: 1, c: 1, name: 'S4', label: 'Poison\n(-10)', type: 'poison', reward: -10, isTerminal: true },
+        { r: 1, c: 2, name: 'S5', label: 'Big Cheese\n(+10)', type: 'big', reward: 10, isTerminal: true }
+      ]
+    ];
+    const ACTIONS = ['Right', 'Down', 'Left', 'Up'];
+
+    function getNextState(r, c, action) {
+      let nr = r, nc = c;
+      if (action === 'Up') nr = Math.max(0, r - 1);
+      if (action === 'Down') nr = Math.min(1, r + 1);
+      if (action === 'Left') nc = Math.max(0, c - 1);
+      if (action === 'Right') nc = Math.min(2, c + 1);
+      return { r: nr, c: nc, cell: MAZE[nr][nc] };
+    }
+
+    // --- MCTS NODE CLASS ---
+    let nodeCounter = 0;
+    class MCTSNode {
+      constructor(r, c, action = null, parent = null) {
+        this.id = 'N' + (nodeCounter++);
+        this.r = r;
+        this.c = c;
+        this.stateName = MAZE[r][c].name;
+        this.action = action;
+        this.parent = parent;
+        this.children = [];
+        
+        if (this.stateName === 'S0') this.untriedActions = ['Right', 'Down'];
+        else if (this.stateName === 'S1') this.untriedActions = ['Down', 'Right'];
+        else if (this.stateName === 'S2') this.untriedActions = ['Down', 'Left'];
+        else if (this.stateName === 'S3') this.untriedActions = ['Right', 'Up'];
+        else this.untriedActions = [];
+
+        this.visits = 0;
+        this.totalReward = 0;
+        this.stage = null;
+        this.ucbScore = 0;
+        this.allReturns = [];
+      }
+
+      isFullyExpanded() {
+        return this.untriedActions.length === 0;
+      }
+
+      isTerminal() {
+        return MAZE[this.r][this.c].isTerminal;
+      }
+
+      get meanValue() {
+        return this.visits === 0 ? 0 : this.totalReward / this.visits;
+      }
+    }
+
+    // --- GLOBAL VARIABLES ---
+    let root = new MCTSNode(0, 0);
+    let selectedInspectorNode = root;
+    let totalRollouts = 0;
+    let autoInterval = null;
+
+    let currentPhase = 'IDLE';
+    let activePath = [];
+    let selectedNode = null;
+    let expandedNode = null;
+    let windowSimNodes = [];
+
+    // --- RENDER MAZE ---
+    function renderMaze(agentPos = null) {
+      const gridEl = document.getElementById('mazeGrid');
+      gridEl.innerHTML = '';
+      for (let r = 0; r < 2; r++) {
+        for (let c = 0; c < 3; c++) {
+          const cellData = MAZE[r][c];
+          const cellEl = document.createElement('div');
+          cellEl.className = `cell ${cellData.type}`;
+          
+          if (agentPos && agentPos.r === r && agentPos.c === c) {
+            cellEl.classList.add('agent-here');
+            const badge = document.createElement('div');
+            badge.className = 'agent-badge';
+            badge.innerText = 'A';
+            cellEl.appendChild(badge);
+          }
+
+          const tag = document.createElement('div');
+          tag.className = 'state-tag';
+          tag.innerText = cellData.name;
+          cellEl.appendChild(tag);
+
+          const textEl = document.createElement('div');
+          textEl.innerText = cellData.label.replace('\n', ' ');
+          cellEl.appendChild(textEl);
+
+          gridEl.appendChild(cellEl);
+        }
+      }
+    }
+
+    function logMath(html) {
+      const box = document.getElementById('logBox');
+      box.innerHTML += `<div class="math-line">${html}</div>`;
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function clearLog() {
+      document.getElementById('logBox').innerHTML = '';
+    }
+
+    function calculateUCB(node, parentVisits, C) {
+      if (node.visits === 0) return Infinity;
+      const exploitation = node.meanValue;
+      const exploration = C * Math.sqrt(Math.log(parentVisits) / node.visits);
+      return exploitation + exploration;
+    }
+
+    function selectBestChild(node) {
+      const C = parseFloat(document.getElementById('paramC').value) || 1.414;
+      let bestScore = -Infinity;
+      let bestChild = null;
+
+      for (const child of node.children) {
+        const ucb = calculateUCB(child, node.visits, C);
+        child.ucbScore = ucb;
+        if (ucb > bestScore) {
+          bestScore = ucb;
+          bestChild = child;
+        }
+      }
+      return bestChild;
+    }
+
+    function clearStages(node) {
+      node.stage = null;
+      for (const child of node.children) clearStages(child);
+    }
+
+    // --- STEP-BY-STEP PHASE EXECUTION ---
+    function stepPhase() {
+      const C = parseFloat(document.getElementById('paramC').value) || 1.414;
+      const gamma = parseFloat(document.getElementById('paramGamma').value) || 0.9;
+
+      if (currentPhase === 'IDLE' || currentPhase === 'BACKPROPAGATION') {
+        // Phase 1: SELECTION
+        clearStages(root);
+        currentPhase = 'SELECTION';
+        updatePhaseBadge('Selection', 'phase-selection');
+
+        selectedNode = root;
+        activePath = [selectedNode];
+        selectedNode.stage = 'selection';
+
+        logMath(`<b>[Rollout #${totalRollouts + 1} — Selection]</b> Root N = ${root.visits}.`);
+
+        while (!selectedNode.isTerminal() && selectedNode.isFullyExpanded() && selectedNode.children.length > 0) {
+          let mathStr = `<b>Selection Evaluation at ${selectedNode.stateName}:</b> Parent N = ${selectedNode.visits}, C = ${C}.<br/>`;
+          const ucbTerms = [];
+
+          for (const child of selectedNode.children) {
+            const meanQ = child.meanValue;
+            if (child.visits === 0) {
+              ucbTerms.push(`&nbsp;&nbsp;• <b>${child.action} → ${child.stateName}:</b> N = ${child.visits} → UCB = ∞ (Unvisited)`);
+            } else {
+              const expl = C * Math.sqrt(Math.log(selectedNode.visits) / child.visits);
+              const ucbVal = calculateUCB(child, selectedNode.visits, C);
+              child.ucbScore = ucbVal;
+              ucbTerms.push(`&nbsp;&nbsp;• <b>${child.action} → ${child.stateName}:</b> Q = ${meanQ.toFixed(2)}, N = ${child.visits} → UCB = ${meanQ.toFixed(2)} + ${C} × √[ln(${selectedNode.visits}) / ${child.visits}] = ${meanQ.toFixed(2)} + ${expl.toFixed(2)} = <b>${ucbVal.toFixed(2)}</b>`);
+            }
+          }
+          
+          const next = selectBestChild(selectedNode);
+          if (!next) break;
+
+          mathStr += ucbTerms.join('<br/>') + `<br/>&nbsp;&nbsp;<span class="highlight">➔ Selected Action: ${next.action} → ${next.stateName} (highest UCB)</span>`;
+          logMath(`• ${mathStr}`);
+
+          selectedNode = next;
+          selectedNode.stage = 'selection';
+          activePath.push(selectedNode);
+        }
+
+        renderMaze({ r: selectedNode.r, c: selectedNode.c });
+        renderTree();
+        updateActionTable();
+        return;
+      }
+
+      if (currentPhase === 'SELECTION') {
+        // Phase 2: EXPANSION
+        currentPhase = 'EXPANSION';
+        updatePhaseBadge('Expansion', 'phase-expansion');
+
+        if (!selectedNode.isTerminal() && selectedNode.untriedActions.length > 0) {
+          const action = selectedNode.untriedActions.shift();
+          const nextState = getNextState(selectedNode.r, selectedNode.c, action);
+
+          expandedNode = new MCTSNode(nextState.r, nextState.c, action, selectedNode);
+          selectedNode.children.push(expandedNode);
+          expandedNode.stage = 'expansion';
+          activePath.push(expandedNode);
+
+          const stepReward = MAZE[expandedNode.r][expandedNode.c].reward;
+          logMath(`• <b>Expansion:</b> From ${selectedNode.stateName}, expand action <b>${action}</b> → cell (${expandedNode.r},${expandedNode.c}) [${expandedNode.stateName}], step reward = <b>${stepReward}</b>.`);
+        } else {
+          expandedNode = selectedNode;
+          expandedNode.stage = 'expansion';
+          logMath(`• <b>Expansion:</b> Node ${selectedNode.stateName} reached expansion state.`);
+        }
+
+        renderMaze({ r: expandedNode.r, c: expandedNode.c });
+        renderTree();
+        updateActionTable();
+        return;
+      }
+
+      if (currentPhase === 'EXPANSION') {
+        // Phase 3: SIMULATION
+        currentPhase = 'SIMULATION';
+        updatePhaseBadge('Simulation', 'phase-simulation');
+
+        windowSimNodes = [];
+        let currR = expandedNode.r;
+        let currC = expandedNode.c;
+
+        if (!expandedNode.isTerminal()) {
+          let maxSteps = 10;
+          let steps = 0;
+          while (!MAZE[currR][currC].isTerminal && steps < maxSteps) {
+            steps++;
+            let nextAct = '';
+
+            if (currR === 0 && currC === 1) {
+              nextAct = (totalRollouts === 0 || totalRollouts === 2) ? 'Down' : 'Right';
+            } else if (currR === 1 && currC === 0) {
+              nextAct = 'Right';
+            } else if (currR === 0 && currC === 2) {
+              nextAct = 'Down';
+            } else {
+              nextAct = ACTIONS[Math.floor(Math.random() * ACTIONS.length)];
+            }
+
+            const next = getNextState(currR, currC, nextAct);
+            currR = next.r;
+            currC = next.c;
+            windowSimNodes.push({ r: currR, c: currC, stateName: MAZE[currR][currC].name, reward: MAZE[currR][currC].reward });
+          }
+        }
+
+        expandedNode.stage = 'simulation';
+
+        let fullPathNames = activePath.map(n => n.stateName);
+        windowSimNodes.forEach(sn => fullPathNames.push(sn.stateName));
+
+        logMath(`• <b>Simulation:</b> Full path: [${fullPathNames.join(' → ')}].`);
+
+        const finalState = windowSimNodes.length > 0 ? windowSimNodes[windowSimNodes.length - 1] : expandedNode;
+        renderMaze({ r: finalState.r, c: finalState.c });
+        renderTree();
+        return;
+      }
+
+      if (currentPhase === 'SIMULATION') {
+        // Phase 4: BACKPROPAGATION
+        currentPhase = 'BACKPROPAGATION';
+        updatePhaseBadge('Backprop', 'phase-backprop');
+
+        const fullSteps = [];
+        for (let i = 0; i < activePath.length; i++) {
+          const n = activePath[i];
+          fullSteps.push({ node: n, stateName: n.stateName, r: n.r, c: n.c, reward: MAZE[n.r][n.c].reward, isTerminal: n.isTerminal() });
+        }
+        for (let m = 0; m < windowSimNodes.length; m++) {
+          const sn = windowSimNodes[m];
+          fullSteps.push({ node: null, stateName: sn.stateName, r: sn.r, c: sn.c, reward: sn.reward, isTerminal: MAZE[sn.r][sn.c].isTerminal });
+        }
+
+        let G = 0;
+        for (let i = fullSteps.length - 1; i >= 0; i--) {
+          const step = fullSteps[i];
+          let nodeReturn = 0;
+
+          if (step.isTerminal) {
+            nodeReturn = step.reward;
+            G = 0;
+          } else {
+            const nextReward = fullSteps[i + 1].reward;
+            G = nextReward + gamma * G;
+            nodeReturn = G;
+          }
+
+          if (step.node) {
+            const curr = step.node;
+            const Q_old = curr.visits === 0 ? 0 : curr.meanValue;
+
+            curr.visits += 1;
+            curr.totalReward += nodeReturn;
+            curr.allReturns.push(nodeReturn);
+            curr.stage = 'backprop';
+
+            const Q_new = curr.meanValue;
+            const N = curr.visits;
+
+            logMath(`• <b>Backprop at ${curr.stateName} (${curr.r},${curr.c}):</b> Return G = ${nodeReturn.toFixed(2)} | N = ${N}<br/>` + 
+                    `&nbsp;&nbsp;<b>Incremental Update:</b> Q<sub>new</sub> = Q<sub>old</sub> + (G - Q<sub>old</sub>) / N = ${Q_old.toFixed(2)} + (${nodeReturn.toFixed(2)} - ${Q_old.toFixed(2)}) / ${N} = <b>${Q_new.toFixed(2)}</b>`);
+          }
+        }
+
+        totalRollouts++;
+        document.getElementById('rolloutCount').innerText = totalRollouts;
+
+        renderMaze({ r: root.r, c: root.c });
+        renderTree();
+        updateActionTable();
+        return;
+      }
+    }
+
+    function runFullRollout() {
+      stepPhase();
+      stepPhase();
+      stepPhase();
+      stepPhase();
+    }
+
+    function runBatchRollouts(count = 10) {
+      if (autoInterval) clearInterval(autoInterval);
+      autoInterval = null;
+      document.getElementById('autoBtn').innerText = 'Auto Play';
+
+      for (let i = 0; i < count; i++) {
+        runFullRollout();
+      }
+    }
+
+    function updatePhaseBadge(text, className) {
+      const badge = document.getElementById('phaseBadge');
+      badge.innerText = text;
+      badge.className = `phase-badge ${className}`;
+    }
+
+    function resetAll() {
+      if (autoInterval) clearInterval(autoInterval);
+      autoInterval = null;
+      document.getElementById('autoBtn').innerText = 'Auto Play';
+
+      nodeCounter = 0;
+      root = new MCTSNode(0, 0);
+      selectedInspectorNode = root;
+      totalRollouts = 0;
+      currentPhase = 'IDLE';
+
+      document.getElementById('rolloutCount').innerText = '0';
+      document.getElementById('optimalActionDisplay').innerText = 'Searching...';
+      document.getElementById('optimalActionDisplay').style.color = '#059669';
+      updatePhaseBadge('IDLE', 'phase-idle');
+      clearLog();
+      logMath('Lab visualizer reset. Click <b>Step Phase</b> or <b>1 Rollout</b> to run repeatable simulation.');
+
+      renderMaze({ r: 0, c: 0 });
+      renderTree();
+      updateActionTable();
+    }
+
+    // --- ENLARGED SVG TREE RENDERER ---
+    function renderTree() {
+      const svg = document.getElementById('treeSVG');
+      svg.innerHTML = '';
+
+      const nodes = [];
+      const links = [];
+
+      function layoutNode(node, depth = 0, left = 0, right = 920) {
+        const x = (left + right) / 2;
+        const y = 60 + depth * 90;
+        node._x = x;
+        node._y = y;
+        nodes.push(node);
+
+        if (node.children.length > 0) {
+          const step = (right - left) / node.children.length;
+          node.children.forEach((child, idx) => {
+            links.push({ parent: node, child: child });
+            layoutNode(child, depth + 1, left + idx * step, left + (idx + 1) * step);
+          });
+        }
+      }
+
+      layoutNode(root, 0, 0, 920);
+
+      links.forEach(l => {
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        const d = `M ${l.parent._x} ${l.parent._y + 36} C ${l.parent._x} ${(l.parent._y + l.child._y)/2}, ${l.child._x} ${(l.parent._y + l.child._y)/2}, ${l.child._x} ${l.child._y - 36}`;
+        path.setAttribute('d', d);
+        path.setAttribute('class', `link ${l.child.stage ? 'active' : ''}`);
+        svg.appendChild(path);
+      });
+
+      nodes.forEach(n => {
+        const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        const isSelected = (n === selectedInspectorNode);
+        g.setAttribute('transform', `translate(${n._x}, ${n._y})`);
+        g.setAttribute('class', `node ${n.stage || ''} ${isSelected ? 'selected' : ''}`);
+
+        g.addEventListener('click', (e) => {
+          e.stopPropagation();
+          selectedInspectorNode = n;
+          renderTree();
+          updateActionTable();
+        });
+
+        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        circle.setAttribute('r', 36);
+        g.appendChild(circle);
+
+        const textState = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        textState.setAttribute('class', 'text-state');
+        textState.textContent = n.stateName;
+        textState.setAttribute('y', -14);
+        g.appendChild(textState);
+
+        const textCell = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        textCell.setAttribute('class', 'text-cell');
+        textCell.textContent = n.action ? `${n.action} (${n.r},${n.c})` : `cell (${n.r},${n.c})`;
+        textCell.setAttribute('y', 3);
+        g.appendChild(textCell);
+
+        const textStats = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        textStats.setAttribute('class', 'text-stats');
+        textStats.textContent = `N:${n.visits} Q:${n.meanValue.toFixed(1)}`;
+        textStats.setAttribute('y', 18);
+        g.appendChild(textStats);
+
+        svg.appendChild(g);
+      });
+    }
+
+    // --- CHILD ACTIONS TABLE ---
+    function updateActionTable() {
+      const titleEl = document.getElementById('selectedNodeTitle');
+      const node = selectedInspectorNode || root;
+      titleEl.innerText = `${node.stateName} — cell (${node.r},${node.c})`;
+
+      const tbody = document.querySelector('#actionTable tbody');
+      tbody.innerHTML = '';
+
+      if (node.children.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="color: #94a3b8;">No actions expanded for this node yet</td></tr>';
+        return;
+      }
+
+      const C = parseFloat(document.getElementById('paramC').value) || 1.414;
+      let maxVisits = -1;
+      let bestChild = null;
+
+      node.children.forEach(child => {
+        if (child.visits > maxVisits) {
+          maxVisits = child.visits;
+          bestChild = child;
+        }
+      });
+
+      node.children.forEach(child => {
+        const ucb = calculateUCB(child, node.visits, C);
+        const tr = document.createElement('tr');
+        
+        if (child === bestChild && node.visits >= 2) {
+          tr.className = 'highlight-row';
+        }
+
+        let ucbFormulaStr = '';
+        if (child.visits === 0) {
+          ucbFormulaStr = '∞ (Unvisited)';
+        } else {
+          const expl = (C * Math.sqrt(Math.log(node.visits) / child.visits)).toFixed(2);
+          ucbFormulaStr = `${child.meanValue.toFixed(2)} + ${expl} = <strong>${ucb.toFixed(2)}</strong>`;
+        }
+
+        tr.innerHTML = `
+          <td><strong>${child.action}</strong></td>
+          <td><strong>${child.stateName}</strong></td>
+          <td>cell (${child.r}, ${child.c})</td>
+          <td>${child.visits}</td>
+          <td>${child.totalReward.toFixed(1)}</td>
+          <td>${child.meanValue.toFixed(2)}</td>
+          <td>${ucbFormulaStr}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      if (root.children.length > 0) {
+        let rootBest = root.children[0];
+        root.children.forEach(c => { if (c.visits > rootBest.visits) rootBest = c; });
+        if (root.visits >= 3) {
+          document.getElementById('optimalActionDisplay').innerText = `${rootBest.action} → ${rootBest.stateName}`;
+        }
+      }
+    }
+
+    // --- EVENT LISTENERS ---
+    document.getElementById('stepBtn').addEventListener('click', () => {
+      if (autoInterval) clearInterval(autoInterval);
+      stepPhase();
+    });
+
+    document.getElementById('rolloutBtn').addEventListener('click', () => {
+      if (autoInterval) clearInterval(autoInterval);
+      runFullRollout();
+    });
+
+    document.getElementById('run10Btn').addEventListener('click', () => {
+      runBatchRollouts(10);
+    });
+
+    document.getElementById('autoBtn').addEventListener('click', () => {
+      if (autoInterval) {
+        clearInterval(autoInterval);
+        autoInterval = null;
+        document.getElementById('autoBtn').innerText = 'Auto Play';
+      } else {
+        document.getElementById('autoBtn').innerText = 'Pause';
+        autoInterval = setInterval(() => {
+          runFullRollout();
+        }, 500);
+      }
+    });
+
+    document.getElementById('resetBtn').addEventListener('click', resetAll);
+
+    // Initial Load
+    renderMaze({ r: 0, c: 0 });
+    renderTree();
+    updateActionTable();
+  </script>
+</body>
+</html>
