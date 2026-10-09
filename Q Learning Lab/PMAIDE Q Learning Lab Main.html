@@ -342,6 +342,7 @@
       <div class="sidebar-section">Lab</div>
       <button class="nav-btn" data-panel="simulation">🎮 Q-Learning Simulation</button>
       <button class="nav-btn" data-panel="mcts-simulation">🌲 MCTS Simulation</button>
+      <button class="nav-btn" data-panel="mcts-lab">🧪 MCTS Lab</button>
       <button class="nav-btn" data-panel="implementation">💻 Q-Learning Implementation</button>
       <div class="sidebar-section">Resources</div>
       <button class="nav-btn" data-panel="references">📚 References</button>
@@ -1015,6 +1016,17 @@ For each episode:
         </div>
       </section>
 
+      <section class="panel" id="panel-mcts-lab">
+        <div class="section-box">
+          <div class="section-title">MCTS Lab</div>
+          <ul style="margin-left:22px; color:var(--text2); font-size:16px; line-height:1.9; padding:0; list-style:disc;">
+            <li>
+              <a class="link" href="https://colab.research.google.com/drive/1LSQIuEL8GwwfKfehTYHdkPtk9cXtQ60r?usp=sharing" target="_blank" rel="noopener noreferrer">MCTS Lab Notebook</a>
+            </li>
+          </ul>
+        </div>
+      </section>
+
       <section class="panel" id="panel-references">
         <div class="section-box">
           <div class="section-title">References</div>
@@ -1054,6 +1066,11 @@ For each episode:
 
         if (panel === 'mcts-simulation') {
           window.location.href = './MCTS%20Simulation.html';
+          return;
+        }
+
+        if (panel === 'mcts-lab') {
+          window.open('https://colab.research.google.com/drive/1LSQIuEL8GwwfKfehTYHdkPtk9cXtQ60r?usp=sharing', '_blank', 'noopener,noreferrer');
           return;
         }
 
