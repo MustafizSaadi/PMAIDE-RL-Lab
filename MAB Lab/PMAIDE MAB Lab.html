@@ -894,10 +894,10 @@
         <div class="lab-box">
           <div class="section-title">Problem statement</div>
           <p>
-            You are given an online recommendation system that can recommend one item from a set of K candidate products, articles, or services to each user. Each recommendation produces a reward such as click, purchase, engagement, or abandonment. The true quality of each recommendation is unknown at first, and the system must learn which options are best over time.
+            You are given an online recommendation system that can recommend one item from a set of 15 candidate products, articles, or services to each user. Each recommendation produces a reward such as click, purchase, engagement, or abandonment. The true quality of each recommendation is unknown at first, and the system must learn which options are best over time.
           </p>
           <p style="margin-top:10px;">
-            <b>Output the top 5 recommendations after considering amount of exploration and exploitation.</b>
+            <b>Output the top 5 recommendations after considering amount of exploration and exploitation done over a sample of 2500 users.</b>
           </p>
         </div>
 
@@ -914,7 +914,7 @@
 
 import numpy as np
 
-n_arms = 10
+n_arms = 15
 q_star = np.random.normal(0, 1, n_arms)  # true action values
 
 # Write your code here to simulate pulling an arm and returning a reward
@@ -936,10 +936,11 @@ q_star = np.random.normal(0, 1, n_arms)  # true action values
 # Compute cumulative reward and compare it with a greedy policy
 
 # Example structure:
-# for each timestep:
-#     choose action
-#     observe reward
-#     update estimates
+# for each user:
+#   for each timestep:
+#       choose action
+#       observe reward
+#       update estimates
 </textarea>
             <div class="result-box" id="result2">UCB is useful when we need to explore uncertain arms while still exploiting strong performers.</div>
           </div>
@@ -953,7 +954,7 @@ q_star = np.random.normal(0, 1, n_arms)  # true action values
           <div class="task-body hidden">
             <p>Each student must submit the code and a <strong>two-page report</strong>. The report should summarize the objective, the recommendation setting, the chosen algorithm, the experiment, the result, and the conclusion.</p>
             <ul style="margin: 10px 0 0 20px; color: var(--text2); line-height: 1.9;">
-              <li>Python code implementing the bandit simulation</li>
+              <li>Python code or notebook implementing the bandit simulation</li>
               <li>Two-page report explaining the design and findings</li>
               <li>Discussion of exploration vs exploitation in recommendation systems</li>
               <li>Clear comparison between strategies and final takeaway</li>
