@@ -304,6 +304,157 @@
 
     .link:hover { text-decoration: underline; }
 
+    .city-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .city-cell {
+      min-height: 56px;
+      border-radius: 10px;
+      border: 1px solid rgba(17,24,39,0.08);
+      display: grid;
+      place-items: center;
+      text-align: center;
+      padding: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text);
+      background: #f8fafc;
+    }
+
+    .city-cell.pickup { background: #dcfce7; }
+    .city-cell.dropoff { background: #fef3c7; }
+    .city-cell.blocked { background: #fee2e2; }
+    .city-cell.car { background: #dbeafe; border: 2px solid var(--accent); }
+
+    .legend-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 12px;
+      color: var(--text2);
+      font-size: 13px;
+    }
+
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      background: rgba(74,109,247,0.04);
+      border: 1px solid rgba(74,109,247,0.12);
+      border-radius: 999px;
+    }
+
+    .legend-swatch {
+      width: 12px;
+      height: 12px;
+      border-radius: 4px;
+      border: 1px solid rgba(17,24,39,0.08);
+      display: inline-block;
+    }
+
+    .rubric-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+    }
+
+    .rubric-table th, .rubric-table td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+      vertical-align: top;
+      color: var(--text2);
+      font-size: 14px;
+    }
+
+    .rubric-table th {
+      background: var(--bg3);
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-weight: 800;
+      color: var(--text3);
+    }
+
+    .task-card {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+
+    .task-head {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 14px;
+      cursor: pointer;
+      background: rgba(74,109,247,0.02);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .task-no {
+      width: 25px;
+      height: 25px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: #eaf0ff;
+      color: var(--accent2);
+      font-size: 11px;
+      font-weight: 800;
+      flex-shrink: 0;
+    }
+
+    .task-head strong {
+      flex: 1;
+      font-size: 15px;
+      color: var(--text);
+    }
+
+    .task-body {
+      display: block;
+      padding: 12px 14px 14px;
+    }
+
+    .task-body.hidden { display: none; }
+
+    .task-body textarea {
+      width: 100%;
+      min-height: 160px;
+      resize: vertical;
+      padding: 12px 14px;
+      background: #101827;
+      color: #e5eeff;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px;
+      font-family: var(--mono);
+      font-size: 13px;
+      line-height: 1.7;
+      outline: none;
+      margin-top: 10px;
+    }
+
+    .result-box {
+      margin-top: 12px;
+      display: block;
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      line-height: 1.6;
+      background: #ecfdf5;
+      color: #166534;
+      border: 1px solid #86efac;
+    }
+
     @media (max-width: 900px) {
       .stat-grid, .concept-grid { grid-template-columns: 1fr 1fr; }
     }
@@ -345,6 +496,7 @@
       <button class="nav-btn" data-panel="mcts-simulation">🌲 MCTS Simulation</button>
       <button class="nav-btn" data-panel="mcts-lab">🧪 MCTS Lab</button>
       <button class="nav-btn" data-panel="implementation">💻 Q-Learning Implementation</button>
+      <button class="nav-btn" data-panel="lab-task">🚘 Lab Task</button>
       <div class="sidebar-section">Resources</div>
       <button class="nav-btn" data-panel="references">📚 References</button>
     </nav>
@@ -1062,6 +1214,154 @@ For each episode:
         </div>
       </section>
 
+      <section class="panel" id="panel-lab-task">
+        <div class="section-box">
+          <div class="section-title">Lab task</div>
+          <h3 style="font-size:28px; margin-bottom:10px; color:var(--text);">Autonomous Driving Car: Pick Up and Deliver a Passenger</h3>
+          <p>
+            You are designing a learning controller for an autonomous car operating in a small smart city. The car must safely pick up a passenger at one location and drop them off at a destination while avoiding blocked streets.
+            This is called as the <strong><a href="https://gymnasium.farama.org/environments/toy_text/taxi/" target="_blank" rel="noopener noreferrer">Taxi-v4</a></strong> problem.
+          </p>
+
+          <div style="margin-top:18px; background:rgba(74,109,247,0.04); border:1px solid rgba(74,109,247,0.18); border-radius:12px; padding:14px;">
+            <div class="section-title" style="margin-bottom:8px;">Taxi-v4 environment</div>
+            <p>
+              In <strong>Taxi-v4</strong> 🚕, there are <strong>four designated locations</strong> in the grid world indicated by <strong>R(ed), G(reen), Y(ellow), and B(lue)</strong>.
+            </p>
+            <p>
+              When the episode starts, <strong>the taxi starts off at a random square</strong> and the passenger is at a random location. The taxi drives to the passenger’s location,
+              <strong>picks up the passenger</strong>, drives to the passenger’s destination (another one of the four specified locations), and then <strong>drops off the passenger</strong>.
+              Once the passenger is dropped off, the episode ends.
+            </p>
+
+            <div style="margin-top:14px; text-align:center;">
+              <img src="https://huggingface.co/datasets/huggingface-deep-rl-course/course-images/resolve/main/en/notebooks/unit2/taxi.png" alt="Taxi-v4 grid world" style="max-width:100%; border:1px solid var(--border); border-radius:10px; background:#fff;" />
+            </div>
+          </div>
+
+          <div style="margin-top:18px; background:rgba(14,17,22,0.02); border:1px solid var(--border); border-radius:12px; padding:14px;">
+            <div class="section-title" style="margin-bottom:8px;">Action space 🎮</div>
+            <p>
+              The action space is discrete with <strong>6 actions available</strong>:
+            </p>
+            <ul style="margin:8px 0 0 22px; color:var(--text2); line-height:1.9; padding:0; list-style:disc;">
+              <li>0: move south</li>
+              <li>1: move north</li>
+              <li>2: move east</li>
+              <li>3: move west</li>
+              <li>4: pickup passenger</li>
+              <li>5: drop off passenger</li>
+            </ul>
+          </div>
+
+          <div style="margin-top:18px; background:rgba(14,17,22,0.02); border:1px solid var(--border); border-radius:12px; padding:14px;">
+            <div class="section-title" style="margin-bottom:8px;">Reward function 💰</div>
+            <ul style="margin:8px 0 0 22px; color:var(--text2); line-height:1.9; padding:0; list-style:disc;">
+              <li>-1 per step unless other reward is triggered.</li>
+              <li>+20 delivering passenger.</li>
+              <li>-10 executing “pickup” and “drop-off” actions illegally.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="task-card">
+          <div class="task-head" data-task="task1">
+            <div class="task-no">1</div>
+            <strong>Initialize the environment and the hyperparameters</strong>
+          </div>
+          <div class="task-body">
+            <textarea spellcheck="false"># Task 1: Initialize the autonomous driving environment
+env = gym.make("Taxi-v4", render_mode="rgb_array")
+
+state_space = env.observation_space.n
+print("There are ", state_space, " possible states")
+
+action_space = env.action_space.n
+print("There are ", action_space, " possible actions")
+
+Qtable_taxi = initialize_q_table(state_space, action_space)
+
+alpha = [0.1, 0.5, 0.9]  # Example learning rates to test
+gamma = [0.9, 0.8, 0.7]  # Example discount factors to test
+num_episodes = 1000      # Example episode value
+
+# DO NOT MODIFY EVAL_SEED
+eval_seed = [16,54,165,177,191,191,120,80,149,178,48,38,6,125,174,73,50,172,100,148,146,6,25,40,68,148,49,167,9,97,164,176,61,7,54,55,
+ 161,131,184,51,170,12,120,113,95,126,51,98,36,135,54,82,45,95,89,59,95,124,9,113,58,85,51,134,121,169,105,21,30,11,50,65,12,43,82,145,152,97,106,55,31,85,38,
+ 112,102,168,123,97,21,83,158,26,80,63,5,81,32,11,28,148] # Evaluation seed, this ensures that all classmates agents are trained on the same taxi starting position
+
+</textarea>
+            <div class="result-box">Initialize the Q-table for Taxi environment</div>
+          </div>
+        </div>
+
+        <div class="task-card">
+          <div class="task-head" data-task="task3">
+            <div class="task-no">2</div>
+            <strong>Train a Q-learning policy for the autonomous car</strong>
+          </div>
+          <div class="task-body hidden">
+            <p>
+              Implement Q-learning so the autonomous car learns which actions to take at each state. Choose an exploration strategy and compare between different learning rates and discount factors. Your goal is to make the agent learn the route that picks up the passenger and reaches the destination reliably.
+            </p>
+            <textarea spellcheck="false"># Task 2: Q-learning for the autonomous car with evaluation
+# Train the car to learn a policy from state-action values
+# Use epsilon-greedy/UCB/decaying-epsilon-greedy exploration
+
+for each alpha_value in alpha:
+    for each gamma_value in gamma:
+        # Initialize Q-table for this combination of alpha and gamma
+        Q = initialize_q_table(state_space, action_space)
+        
+        for each episode in num_episodes:
+            state = env.reset()
+            done = False
+            
+            while not done:
+                # Choose action using epsilon-greedy strategy
+                if random.uniform(0, 1) < epsilon:
+                    action = env.action_space.sample()  # Explore
+                else:
+                    action = np.argmax(Q[state])  # Exploit
+                
+                next_state, reward, done, info = env.step(action)
+                
+                # Q-learning update
+                best_next_action = np.argmax(Q[next_state])
+                td_target = reward + gamma_value * Q[next_state][best_next_action]
+                td_error = td_target - Q[state][action]
+                Q[state][action] += alpha_value * td_error
+                
+                state = next_state
+        record video of the learned strategy
+        evaluate the learned policy using the eval_seed
+
+</textarea>
+            <div class="result-box">A successful model should learn to pick up the passenger and deliver them without getting stuck or crashing. Also, it should have high mean reward with less deviation</div>
+          </div>
+        </div>
+
+        <div class="task-card">
+          <div class="task-head" data-task="task4">
+            <div class="task-no">3</div>
+            <strong>Prepare the final report and comparison</strong>
+          </div>
+          <div class="task-body hidden">
+            <p>
+              Each student should submit a two-page report summarizing the objective, the autonomous driving environment setup, the chosen algorithm, the experiment, the result, and the conclusion. Include a short explanation of the exploration strategy, the hyperparameter comparison, and the final takeaway from the learning process.
+            </p>
+            <ul style="margin:10px 0 0 22px; color:var(--text2); line-height:1.9; padding:0; list-style:disc;">
+              <li>Summarize the objective and environment settings.</li>
+              <li>Explain the selected Q-learning algorithm and exploration strategy.</li>
+              <li>Video recording of the different learning strategies with different hyperparameters</li>
+              <li>Present the experiment, mean reward, and deviation plots for different hyperparameters.</li>
+              <li>Compare strategies and explain the final conclusion.</li>
+            </ul>
+            <div class="result-box">The final takeaway should clearly show how different hyperparameters affect learning quality and which policy performs best.</div>
+          </div>
+        </div>
+      </section>
+
       <section class="panel" id="panel-references">
         <div class="section-box">
           <div class="section-title">References</div>
@@ -1112,6 +1412,13 @@ For each episode:
         navButtons.forEach((b) => b.classList.remove('active'));
         btn.classList.add('active');
         document.querySelectorAll('.panel').forEach((p) => p.classList.toggle('active', p.id === `panel-${panel}`));
+      });
+    });
+
+    document.querySelectorAll('.task-head').forEach((head) => {
+      head.addEventListener('click', () => {
+        const body = head.nextElementSibling;
+        body.classList.toggle('hidden');
       });
     });
 
