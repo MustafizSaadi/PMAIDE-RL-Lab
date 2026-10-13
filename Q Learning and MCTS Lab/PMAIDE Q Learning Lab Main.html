@@ -333,12 +333,13 @@
       <div class="sidebar-section">Theory</div>
       <button class="nav-btn active" data-panel="overview">📘 Overview</button>
       <button class="nav-btn" data-panel="value-based">📊 Value-Based Methods</button>
-      <button class="nav-btn" data-panel="bellman">🧠 Bellman Equation</button>
       <button class="nav-btn" data-panel="mc-vs-td">⚖️ Monte Carlo VS Temporal DIfference</button>
       <button class="nav-btn" data-panel="mc-learning">🎲 Monte Carlo Learning</button>
+      <button class="nav-btn" data-panel="bellman">🧠 Bellman Equation</button>
       <button class="nav-btn" data-panel="td">⚡ TD Learning</button>
       <button class="nav-btn" data-panel="recap">📝 Q-Learning Recap</button>
       <button class="nav-btn" data-panel="sarsa">⚖️ SARSA VS Q-Learning</button>
+      <button class="nav-btn" data-panel="mcts-vs-q-learning">🌐 MCTS VS Q-Learning</button>
       <div class="sidebar-section">Lab</div>
       <button class="nav-btn" data-panel="simulation">🎮 Q-Learning Simulation</button>
       <button class="nav-btn" data-panel="mcts-simulation">🌲 MCTS Simulation</button>
@@ -449,10 +450,9 @@
           <div class="section-title">Objective</div>
           <p>
             The agent's goal is to maximize the expected cumulative reward, also called the <strong>return</strong>.
+            <br>
+            <img src="./Return function.png" alt="Return function" style="max-width:100%; height:auto;">
           </p>
-          <div class="formula-box">
-            G_t = r_{t+1} + γ r_{t+2} + γ² r_{t+3} + ... = Σ_{k=0}^{∞} γ^k r_{t+k+1}
-          </div>
           <p>
             A discount factor <strong>γ ∈ [0,1]</strong> makes rewards farther in the future less important than immediate rewards.
             This helps the agent trade off short-term reward and long-term planning.
@@ -512,29 +512,24 @@
             They are the foundation of many RL algorithms, including dynamic programming and TD methods.
           </p>
 
-          <div class="formula-box">
-            V(s) = Σ_{a} π(a|s) Σ_{s', r} P(s', r | s, a) [r + γ V(s')]
-          </div>
-
           <p>
+            <img src="./bellman equation.png" alt="Bellman Equation" style="max-width:100%; height:auto;">
+            <br>
             This is the <strong>Bellman expectation equation</strong>. It says that the value of a state is the expected immediate reward plus the discounted value of the next state,
             weighted by the policy and the environment dynamics.
           </p>
 
-          <div class="formula-box">
-            Q*(s, a) = Σ_{s', r} P(s', r | s, a) [r + γ max_{a'} Q*(s', a')]
-          </div>
 
           <p>
+            <img src="./bellman optimality.png" alt="Bellman Optimality Equation" style="max-width:100%; height:auto;">
+            <br>
             This is the <strong>Bellman optimality equation</strong> for action values. It defines the optimal action-value function as the expected reward of taking action <strong>a</strong>
             now, plus the best future action from the next state.
           </p>
 
-          <div class="formula-box">
-            V*(s) = max_a Σ_{s', r} P(s', r | s, a) [r + γ V*(s')]
-          </div>
-
           <p>
+            <img src="./optimal policy.png" alt="Optimal Policy derivation" style="max-width:100%; height:auto;">
+            <br>
             The optimal policy is the one that chooses actions with the highest value in every state. In practice, RL agents do not usually know the exact transition model, so
             they learn these values from samples gathered while interacting with the environment.
           </p>
@@ -582,25 +577,23 @@
             So it requires a complete episode of interaction before updating our value function.
           </p>
 
-          <div class="formula-box">
-            G_t = R_{t+1} + R_{t+2} + R_{t+3} + ...
-          </div>
-
           <div class="section-box" style="margin-top:16px; background:rgba(14,17,22,0.02); border-color:var(--border);">
             <div class="section-title">Monte Carlo</div>
             <p>
               We always start the episode at the same starting point.<br>
-              The agent takes actions using the policy. For instance, using an <strong>ε-greedy strategy</strong>, a policy that alternates between exploration (random actions) and exploitation.
+              The agent takes actions using a policy.
             </p>
             <p style="margin-top:10px;">
-              We get the reward and the next state. We terminate the episode if the cat eats the mouse or if the mouse moves more than 10 steps.
+              We get the reward and the next state. We terminate the episode if we reach any terminal state.
             </p>
             <p style="margin-top:10px;">
-              At the end of the episode, we have a list of <strong>(state, action, reward, next_state)</strong> tuples, for example:
-              <strong>[[State tile 3 bottom, Go Left, +1, State tile 2 bottom], [State tile 2 bottom, Go Left, +0, State tile 1 bottom], ...]</strong>
+              At the end of the episode, we have a list of <strong>(state, action, reward, next_state)</strong> tuples.
             </p>
             <p style="margin-top:10px;">
               The agent will sum the total rewards <strong>G<sub>t</sub></strong> to see how well it did. It will then update <strong>V(s<sub>t</sub>)</strong> based on the formula.
+            </p>
+            <p style="margin-top:10px;">
+              The policy will update with the best state-action value pairs so far.
             </p>
           </div>
 
@@ -630,25 +623,44 @@
             </p>
             <p style="margin-top:10px;">
               We have a list of state, action, reward, next_state. We need to calculate the return:
+              <br>
+              <img src="./monte carlo example.png" alt="Return calculation" style="max-width:100%; height:auto;">
             </p>
-            <div class="formula-box">
-              G_t = R_{t+1} + R_{t+2} + R_{t+3} + ...
-            </div>
-            <div class="formula-box" style="margin-top:10px;">
-              G_0 = R_1 + R_2 + R_3 + ... = 1 + 0 + 0 + 0 + 0 + 0 + 1 + 1 + 0 + 0 = 3
-            </div>
-            <p style="margin-top:10px;">
-              We can now compute the new <strong>V(S<sub>0</sub>)</strong>:
-            </p>
-            <div class="formula-box">
-              V(S_0) = V(S_0) + lr × [G_0 − V(S_0)]
-            </div>
-            <div class="formula-box" style="margin-top:10px;">
-              V(S_0) = 0 + 0.1 × [3 − 0] = 0.3
-            </div>
             <p style="margin-top:10px;">
               After many episodes, the agent learns which states are better and updates its estimate of the value function accordingly.
             </p>
+          </div>
+
+          <div class="section-box" style="margin-top:20px; background:rgba(14,17,22,0.02); border-color:var(--border);">
+            <div class="section-title">Monte Carlo Tree Search (MCTS)</div>
+            <p>
+              <strong>Monte Carlo Tree search</strong> is an evolution from the generic Monte Carlo Methods.
+            </p>
+            <p style="margin-top:10px;">
+              Monte Carlo tree search is a method that relies on intelligent tree search that balances exploration and exploitation. It performs random sampling in the form of simulations and stores the statistics of actions to make more educated choices in each subsequent iteration.
+            </p>
+            <p style="margin-top:10px;">
+              Monte Carlo tree search only searches a few layers deep into the tree and prioritizes which parts of the tree to explore. It then simulates the outcome rather than exhaustively expanding the search space. In doing so, it limits how many evaluations it has to make.
+            </p>
+
+            <div class="section-box" style="margin-top:16px; background:rgba(74,109,247,0.03); border-color:rgba(74,109,247,0.18);">
+              <div class="section-title">Algorithm: MCTS (UCT)</div>
+              <p>
+                <strong>Input:</strong> root situation <strong>s<sub>0</sub></strong>, simulator, number of rounds <strong>K</strong>, constant <strong>c</strong>, discount <strong>γ</strong>.
+              </p>
+              <ol style="margin:10px 0 0 22px; padding:0; line-height:1.7;">
+                <li><strong>Initialise.</strong> The tree contains only the root. All <strong>N = 0</strong>, <strong>Q = 0</strong>.</li>
+                <li><strong>Repeat K times:</strong>
+                  <ol type="a" style="margin-top:6px; margin-left:20px; padding:0; line-height:1.7;">
+                    <li><strong>Select:</strong> from the root, while every action at the node has been tried, move along the action with the highest UCB value <strong>Q + c √(ln N(s) / N(s, a))</strong>.</li>
+                    <li><strong>Expand:</strong> try one untried action with the simulator; add the new node.</li>
+                    <li><strong>Simulate:</strong> play randomly from the new node to the end; compute the return <strong>G</strong>.</li>
+                    <li><strong>Back up:</strong> for each edge on the path, bottom to top, set <strong>G ← r + γG</strong>, then <strong>N ← N + 1</strong>, <strong>Q ← Q + (G − Q)/N</strong>.</li>
+                  </ol>
+                </li>
+                <li><strong>Decide.</strong> Return the root action with the most visits, <strong>a<sup>*</sup> = arg max<sub>a</sub> N(s<sub>0</sub>, a)</strong>.</li>
+              </ol>
+            </div>
           </div>
         </div>
       </section>
@@ -659,11 +671,9 @@
           <p>
             <strong>Temporal Difference (TD)</strong> learning combines ideas from Monte Carlo methods and dynamic programming. It updates value estimates using the difference between
             the current estimate and a better estimate formed from observed data.
+            <br>
+            <img src="./q-value estimation.png" alt="TD Learning" style="max-width:100%; height:auto;">
           </p>
-
-          <div class="formula-box">
-            Q(s, a) ← Q(s, a) + α [r + γ max_{a'} Q(s', a') - Q(s, a)]
-          </div>
 
           <p>
             This is the classic <strong>Q-learning update</strong>. The term inside brackets is the <strong>TD error</strong>:
@@ -711,24 +721,6 @@
             the estimates become better and better approximations of the true action values.
           </p>
 
-          <div class="section-box" style="margin-top:16px; background:rgba(74,109,247,0.03); border-color:rgba(74,109,247,0.18);">
-            <div class="section-title">A simple Q-learning example</div>
-            <p>
-              Imagine a mouse in a small maze. It always starts at the same point and tries to reach the big pile of cheese while avoiding poison. The episode ends if it eats poison,
-              reaches the cheese, or exceeds the step limit.
-            </p>
-            <ul style="margin:10px 0 0 22px; padding:0;">
-              <li><strong>+1</strong>: small cheese</li>
-              <li><strong>+10</strong>: large cheese</li>
-              <li><strong>-10</strong>: poison</li>
-              <li><strong>+0</strong>: empty cell or too many steps</li>
-            </ul>
-            <p style="margin-top:10px;">
-              The agent learns by trying actions, receiving rewards, and updating <strong>Q(s, a)</strong> values. Over time, it learns that some actions lead to higher long-term reward than others,
-              and it builds an optimal policy that prefers the best actions in each state.
-            </p>
-          </div>
-
           <div class="concept-grid" style="margin-top:14px;">
             <div class="concept">
               <h3>Q-table</h3>
@@ -752,17 +744,6 @@
               <li>It updates values using bootstrapping from the next state, which is the essence of temporal-difference learning.</li>
               <li>When the Q-table converges, the greedy policy based on it becomes optimal.</li>
             </ul>
-          </div>
-
-          <div class="section-box" style="margin-top:16px; background:rgba(74,109,247,0.03); border-color:rgba(74,109,247,0.18);">
-            <div class="section-title">Q-learning update</div>
-            <div class="formula-box">
-              Q(s, a) ← Q(s, a) + α [r + γ max_{a'} Q(s', a') - Q(s, a)]
-            </div>
-            <p style="margin-top:12px;">
-              This update says: move the current estimate toward a better target using the observed reward and the best estimated value from the next state.
-              The difference between the target and the current estimate is the TD error.
-            </p>
           </div>
 
           <div class="section-box" style="margin-top:16px; background:rgba(14,17,22,0.02); border-color:var(--border);">
@@ -928,17 +909,71 @@ For each episode:
         </div>
       </section>
 
+      <section class="panel" id="panel-mcts-vs-q-learning">
+        <div class="section-box">
+          <div class="section-title">MCTS VS Q-Learning</div>
+
+          <div class="concept-grid" style="margin-top:12px;">
+            <div class="concept">
+              <h3>MCTS</h3>
+              <p><strong>Waits until the end of an episode to update.</strong></p>
+              <p><strong>Fails on continuing tasks (no natural episode termination).</strong></p>
+            </div>
+            <div class="concept">
+              <h3>Q-Learning</h3>
+              <p><strong>Updates every single time step (online, incremental).</strong></p>
+              <p><strong>Excels at both episodic and continuing tasks.</strong></p>
+            </div>
+          </div>
+
+          <p style="margin-top:12px;">
+            <strong>MCTS acts as a planner.</strong> Given a state, it looks forward into the future by simulating possible trajectories using a model, evaluates the outcomes, and decides the best immediate action. It does not necessarily retain a generalized policy for states it hasn't explicitly searched.
+          </p>
+
+          <p>
+            <strong>Q-Learning acts as a learner.</strong> It maps out a generalized policy by assigning a value (<strong>Q</strong>-value) to every state-action pair across the entire state space. Once trained, selecting an action is instantaneous (just look up <strong>max<sub>a</sub> Q(s, a)</strong>), requiring no online search tree generation.
+          </p>
+
+          <div class="section-box" style="margin-top:16px; background:rgba(74,109,247,0.03); border-color:rgba(74,109,247,0.18);">
+            <div class="section-title">Key difference in focus</div>
+            <ul style="margin-left:22px; padding:0;">
+              <li><strong>MCTS</strong> focuses its computational budget locally on the current state, making it highly effective for massive state spaces (like Go, chess, or complex combinatorial planning) because it doesn't waste time evaluating irrelevant states. However, it requires a fast simulator.</li>
+              <li><strong>Standard Q-Learning</strong> struggles with large or continuous state spaces because maintaining a tabular <strong>Q[S, A]</strong> becomes memory and time prohibitive.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
       <section class="panel" id="panel-simulation">
         <div class="section-box">
           <div class="section-title">Q-learning simulation</div>
           <p>
-            This simplified maze example follows the Q-learning update rule used in the course. The agent starts in the same state, explores with an epsilon-greedy policy,
-            and updates a Q-table after each action.
+            This simplified maze example follows the Q-learning update rule already discussed. The agent starts in the same state, explores with an epsilon-greedy policy,
+            and updates a Q-table after each action. In this simulation, the <strong>learning rate</strong> is <strong>α = 0.10</strong> and the <strong>discount factor</strong> is <strong>γ = 0.99</strong>.
           </p>
+
+          <div class="section-box" style="margin-top:16px; background:rgba(74,109,247,0.03); border-color:rgba(74,109,247,0.18);">
+            <div class="section-title">A simple Q-learning example</div>
+            <p>
+              Imagine a mouse in a small maze. It always starts at the same point and tries to reach the big pile of cheese while avoiding poison. The episode ends if it eats poison,
+              reaches the cheese, or exceeds the step limit.
+            </p>
+            <ul style="margin:10px 0 0 22px; padding:0;">
+              <li><strong>+1</strong>: small cheese</li>
+              <li><strong>+10</strong>: large cheese</li>
+              <li><strong>-10</strong>: poison</li>
+              <li><strong>+0</strong>: empty cell or too many steps</li>
+            </ul>
+            <p style="margin-top:10px;">
+              The agent learns by trying actions, receiving rewards, and updating <strong>Q(s, a)</strong> values. Over time, it learns that some actions lead to higher long-term reward than others,
+              and it builds an optimal policy that prefers the best actions in each state.
+            </p>
+          </div>
 
           <div style="display:flex; gap:10px; flex-wrap:wrap; margin:16px 0;">
             <button id="q-step-btn" style="border:none; background:linear-gradient(135deg, var(--accent), var(--purple)); color:white; padding:10px 16px; border-radius:8px; font-weight:700; cursor:pointer;">Next step</button>
             <button id="q-reset-btn" style="border:1px solid var(--border); background:var(--bg2); color:var(--text); padding:10px 16px; border-radius:8px; font-weight:600; cursor:pointer;">Reset</button>
+            <button id="q-return-s0-btn" style="display:none; border:1px solid rgba(16,185,129,0.6); background:rgba(16,185,129,0.12); color:#065f46; padding:10px 16px; border-radius:8px; font-weight:700; cursor:pointer;">Return to S0</button>
           </div>
 
           <div style="display:grid; grid-template-columns: minmax(220px, 1.1fr) minmax(260px, 1.2fr); gap:12px; margin-top:12px;">
@@ -1087,19 +1122,19 @@ For each episode:
       { state: 'S0', epsilon: 0.2, action: 'Right', reward: 1, nextState: 'S1', terminal: false, qBefore: 0, gamma: 0.99, alpha: 0.1, target: 1, tdError: 1, updated: 0.1, info: 'A positive reward is received when moving toward the next state.' },
 
       { state: 'S1', epsilon: 0.2, action: 'Up', reward: 0, nextState: 'S1', terminal: false, qBefore: 0, gamma: 0.99, alpha: 0.1, target: 0, tdError: 0, updated: 0, info: 'Up keeps the agent in the maze while the exploration rate remains fixed.' },
-      { state: 'S1', epsilon: 0.2, action: 'Down', reward: -10, nextState: 'S4', terminal: false, qBefore: 0, gamma: 0.99, alpha: 0.1, target: 0, tdError: 0, updated: 0, info: 'Down moves deeper into the maze with no immediate reward.' },
+      { state: 'S1', epsilon: 0.2, action: 'Down', reward: -10, nextState: 'S4', terminal: true, qBefore: 0, gamma: 0.99, alpha: 0.1, target: 0, tdError: 0, updated: 0, info: 'Down reaches the poison state, so the episode ends immediately.' },
       { state: 'S1', epsilon: 0.2, action: 'Left', reward: 0, nextState: 'S0', terminal: false, qBefore: 0, gamma: 0.99, alpha: 0.1, target: 0, tdError: 0, updated: 0, info: 'Left is another non-terminal action under constant epsilon.' },
       { state: 'S1', epsilon: 0.2, action: 'Right', reward: 0, nextState: 'S2', terminal: false, qBefore: 0, gamma: 0.99, alpha: 0.1, target: 0, tdError: 0, updated: 0, info: 'Right keeps the walk moving through the grid without immediate reward.' },
 
       { state: 'S2', epsilon: 0.2, action: 'Up', reward: 0, nextState: 'S2', terminal: false, qBefore: 0, gamma: 0.99, alpha: 0.1, target: 0, tdError: 0, updated: 0, info: 'Moving upward continues the exploration pattern at the same epsilon.' },
-      { state: 'S2', epsilon: 0.2, action: 'Down', reward: 10, nextState: 'S5', terminal: false, qBefore: 0, gamma: 0.99, alpha: 0.1, target: 0, tdError: 0, updated: 0, info: 'Down contributes to value learning with a constant exploration probability.' },
+      { state: 'S2', epsilon: 0.2, action: 'Down', reward: 10, nextState: 'S5', terminal: true, qBefore: 0, gamma: 0.99, alpha: 0.1, target: 0, tdError: 0, updated: 0, info: 'Down reaches the goal state, ending the episode for a successful terminal transition.' },
       { state: 'S2', epsilon: 0.2, action: 'Left', reward: 0, nextState: 'S1', terminal: false, qBefore: 0, gamma: 0.99, alpha: 0.1, target: 0, tdError: 0, updated: 0, info: 'Left is another valid action evaluated with the same epsilon value.' },
       { state: 'S2', epsilon: 0.2, action: 'Right', reward: 0, nextState: 'S2', terminal: false, qBefore: 0, gamma: 0.99, alpha: 0.1, target: 0, tdError: 0, updated: 0, info: 'Right explores the next cell while the environment still remains non-terminal.' },
 
       { state: 'S3', epsilon: 0.2, action: 'Up', reward: 0, nextState: 'S0', terminal: false, qBefore: 0, gamma: 0.99, alpha: 0.1, target: 0, tdError: 0, updated: 0, info: 'Up helps refine the value estimate from the mid-grid state.' },
       { state: 'S3', epsilon: 0.2, action: 'Down', reward: 0, nextState: 'S3', terminal: false, qBefore: 0, gamma: 0.99, alpha: 0.1, target: 0, tdError: 0, updated: 0, info: 'Down is also evaluated with epsilon fixed at 0.2.' },
       { state: 'S3', epsilon: 0.2, action: 'Left', reward: 0, nextState: 'S3', terminal: false, qBefore: 0, gamma: 0.99, alpha: 0.1, target: 0, tdError: 0, updated: 0, info: 'Left keeps the trajectory within the non-terminal region.' },
-      { state: 'S3', epsilon: 0.2, action: 'Right', reward: -10, nextState: 'S4', terminal: false, qBefore: 0, gamma: 0.99, alpha: 0.1, target: 10, tdError: 10, updated: 1, info: 'The right move toward the goal yields a strongly positive reward.' },
+      { state: 'S3', epsilon: 0.2, action: 'Right', reward: -10, nextState: 'S4', terminal: true, qBefore: 0, gamma: 0.99, alpha: 0.1, target: 10, tdError: 10, updated: 1, info: 'The right move reaches the poison terminal state, so the episode ends immediately.' },
 
       { state: 'S4', epsilon: 0.2, action: 'Up', reward: -8, nextState: 'S2', terminal: true, qBefore: 0, gamma: 0.99, alpha: 0.1, target: -10, tdError: -10, updated: -1, info: 'The poison state is terminal, so the episode ends immediately.' },
       { state: 'S4', epsilon: 0.2, action: 'Down', reward: -10, nextState: 'S4', terminal: true, qBefore: 0, gamma: 0.99, alpha: 0.1, target: -10, tdError: -10, updated: -1, info: 'The terminal penalty is applied consistently for all actions in poison.' },
@@ -1123,6 +1158,7 @@ For each episode:
     };
 
     let stepIndex = 0;
+    let episodeIndex = 0;
     let currentState = 'S0';
     const actionOrder = ['Up', 'Down', 'Left', 'Right'];
     const mazeGrid = document.getElementById('maze-grid');
@@ -1130,13 +1166,48 @@ For each episode:
     const tdFormula = document.getElementById('td-formula');
     const tdSummary = document.getElementById('td-summary');
     const qTableElement = document.getElementById('q-sim-table');
+    const returnToS0Button = document.getElementById('q-return-s0-btn');
+
+    function isTerminalState(state) {
+      return ['S4', 'S5'].includes(state);
+    }
+
+    function updateTerminalButton() {
+      if (returnToS0Button) {
+        const shouldShow = isTerminalState(currentState);
+        returnToS0Button.style.display = shouldShow ? 'inline-block' : 'none';
+      }
+    }
+
+    function getDeterministicAction(state) {
+      if (episodeIndex === 0) {
+        if (state === 'S0') return 'Right';
+        if (state === 'S1') return 'Down';
+      }
+
+      if (episodeIndex === 1) {
+        if (state === 'S0') return 'Down';
+        if (state === 'S3') return 'Right';
+      }
+
+      if (state === 'S0') return 'Right';
+      if (state === 'S1') return 'Right';
+      if (state === 'S2') return 'Down';
+
+      return 'Up';
+    }
 
     function epsilonGreedyAction(state) {
+      const epsilon = 0.1;
       const legalActions = actionOrder;
       const bestValue = Math.max(...legalActions.map((action) => qTable[state][action] ?? 0));
       const bestActions = legalActions.filter((action) => (qTable[state][action] ?? 0) === bestValue);
 
-      if (Math.random() < 0.2) {
+      if (episodeIndex <= 2) {
+        return getDeterministicAction(state);
+      }
+
+      if (Math.random() < epsilon) {
         return legalActions[Math.floor(Math.random() * legalActions.length)];
       }
 
@@ -1199,7 +1270,17 @@ For each episode:
     }
 
     function renderStep() {
-      buildMaze();
+      if (isTerminalState(currentState)) {
+        simStatus.innerHTML = `
+          <strong>Terminal state reached: ${currentState}</strong><br>
+          Click <strong>Return to S0</strong> to begin the next episode.<br>
+          No additional Q-learning update is applied while the terminal state is shown.
+        `;
+        tdSummary.innerHTML = 'The episode has reached a terminal state. The agent remains here until the class resets to S0.';
+        updateTerminalButton();
+        return;
+      }
+
       const chosenAction = epsilonGreedyAction(currentState);
       const step = getStepForStateAction(currentState, chosenAction);
       const qBefore = qTable[currentState][chosenAction] ?? 0;
@@ -1208,18 +1289,19 @@ For each episode:
       const target = step.reward + step.gamma * bestNextValue;
       const tdError = target - qBefore;
       const updatedQ = qBefore + step.alpha * tdError;
+      const reachedTerminalState = ['S4', 'S5'].includes(step.nextState);
+      const terminalEpisode = Boolean(step.terminal) || reachedTerminalState;
 
       qTable[currentState][chosenAction] = updatedQ;
 
       simStatus.innerHTML = `
-        <strong>Step ${stepIndex + 1}</strong><br>
-        Current state: <strong>${currentState}</strong><br>
-        Epsilon: <strong>0.20</strong><br>
+        <strong>Episode ${episodeIndex + 1}</strong> · <strong>Step ${stepIndex + 1}</strong><br>
+        Old state: <strong>${currentState}</strong><br>
         Action chosen: <strong>${chosenAction}</strong><br>
         Reward: <strong>${step.reward}</strong><br>
-        Next state: <strong>${step.nextState}</strong><br>
+        Current state: <strong>${step.nextState}</strong><br>
         Best next-state value: <strong>${bestNextValue.toFixed(2)}</strong><br>
-        <span style="color:#1e9d62; font-weight:700;">Q before update = ${qBefore.toFixed(2)}</span>
+        ${terminalEpisode ? '<span style="color:#b91c1c; font-weight:700;">Terminal state reached. The state is kept here until you return to S0.</span>' : '<span style="color:#1e9d62; font-weight:700;">Q before update = ' + qBefore.toFixed(2) + '</span>'}
       `;
 
       const targetValue = step.reward + step.gamma * bestNextValue;
@@ -1232,32 +1314,49 @@ For each episode:
         <em>${step.info}</em>
       `;
 
-      currentState = step.terminal ? 'S0' : step.nextState;
+      currentState = step.nextState;
+      if (terminalEpisode) {
+        episodeIndex += 1;
+      }
+      updateTerminalButton();
+      buildMaze();
       renderQTable();
     }
 
     document.getElementById('q-step-btn').addEventListener('click', () => {
       renderStep();
-      stepIndex += 1;
+      if (!isTerminalState(currentState)) {
+        stepIndex += 1;
+      }
+    });
+
+    document.getElementById('q-return-s0-btn').addEventListener('click', () => {
+      currentState = 'S0';
+      updateTerminalButton();
+      simStatus.innerHTML = '<strong>Episode reset.</strong><br>The state is back at S0. Press “Next step” to begin the next episode.';
+      tdSummary.innerHTML = 'The terminal state is cleared and the next episode begins from S0 without updating any calculation.';
+      buildMaze();
     });
 
     document.getElementById('q-reset-btn').addEventListener('click', () => {
       stepIndex = 0;
+      episodeIndex = 0;
       currentState = 'S0';
       Object.keys(qTable).forEach((state) => {
         Object.keys(qTable[state]).forEach((action) => {
           qTable[state][action] = 0;
         });
       });
-      simStatus.innerHTML = '<strong>Reset complete.</strong><br>Choose the next action to continue training.';
+      updateTerminalButton();
+      simStatus.innerHTML = '<strong>Reset complete.</strong>';
       tdFormula.innerHTML = 'Q(s, a) ← Q(s, a) + α [r + γ max_{a\' } Q(s\', a\') - Q(s, a)]';
-      tdSummary.innerHTML = 'The Q-table starts at zero, so each action must be learned through experience.';
       renderQTable();
       buildMaze();
     });
 
     renderQTable();
     buildMaze();
+    updateTerminalButton();
     simStatus.innerHTML = '<strong>Ready to start.</strong><br>Press “Next step” to see the first Q-learning update.';
     tdSummary.innerHTML = 'The Q-table starts at zero. Each experience updates the estimate using the TD target and the observed reward.';
 
