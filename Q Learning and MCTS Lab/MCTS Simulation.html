@@ -510,14 +510,18 @@
         for (let i = fullSteps.length - 1; i >= 0; i--) {
           const step = fullSteps[i];
           let nodeReturn = 0;
+          let gExplanation = '';
 
           if (step.isTerminal) {
             nodeReturn = step.reward;
+            gExplanation = `r<sub>terminal</sub> = ${step.reward.toFixed(2)}`;
             G = 0;
           } else {
             const nextReward = fullSteps[i + 1].reward;
+            const prevG = G;
             G = nextReward + gamma * G;
             nodeReturn = G;
+            gExplanation = `G = r<sub>next</sub> + γ × G<sub>next</sub> = ${nextReward.toFixed(2)} + ${gamma.toFixed(2)} × ${prevG.toFixed(2)} = <b>${G.toFixed(2)}</b>`;
           }
 
           if (step.node) {
@@ -532,7 +536,8 @@
             const Q_new = curr.meanValue;
             const N = curr.visits;
 
-            logMath(`• <b>Backprop at ${curr.stateName} (${curr.r},${curr.c}):</b> Return G = ${nodeReturn.toFixed(2)} | N = ${N}<br/>` + 
+            logMath(`• <b>Backprop at ${curr.stateName} (${curr.r},${curr.c}):</b> <b>G</b> = ${nodeReturn.toFixed(2)} | N = ${N}<br/>` + 
+                    `&nbsp;&nbsp;<b>G Calculation:</b> ${gExplanation}<br/>` +
                     `&nbsp;&nbsp;<b>Incremental Update:</b> Q<sub>new</sub> = Q<sub>old</sub> + (G - Q<sub>old</sub>) / N = ${Q_old.toFixed(2)} + (${nodeReturn.toFixed(2)} - ${Q_old.toFixed(2)}) / ${N} = <b>${Q_new.toFixed(2)}</b>`);
           }
         }
