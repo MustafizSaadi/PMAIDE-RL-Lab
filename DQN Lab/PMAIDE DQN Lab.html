@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Deep Q-Learning, DQN architecture, and training stability.">
+  <title>Deep Q-Learning</title>
+  <style>
+    :root {
+      --bg: #f3f6fb;
+      --surface: #fff;
+      --surface-alt: #eef3ff;
+      --border: rgba(17, 24, 39, .12);
+      --text: #182033;
+      --muted: #4b5672;
+      --subtle: #71809f;
+      --accent: #4a6df7;
+      --accent-dark: #3749d8;
+      --green: #157347;
+      --amber: #9a5700;
+      --purple: #7c3aed;
+      --radius: 14px;
+      --font: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      --mono: "Cascadia Code", "Fira Code", Consolas, monospace;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font: 16px/1.7 var(--font);
+    }
+    button, input { font: inherit; }
+    header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 22px;
+      background: rgba(255, 255, 255, .94);
+      border-bottom: 1px solid var(--border);
+    }
+    .logo {
+      display: grid;
+      width: 38px;
+      height: 38px;
+      flex: 0 0 auto;
+      place-items: center;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--accent), var(--purple));
+      color: #fff;
+      font-weight: 800;
+    }
+    header h1 { margin: 0; font-size: 16px; line-height: 1.3; }
+    header p { margin: 3px 0 0; color: var(--muted); font-size: 12px; }
+    .header-meta { margin-left: auto; color: var(--subtle); text-align: right; font-size: 12px; }
+    .header-meta strong { color: var(--muted); }
+    .layout { display: flex; min-height: calc(100vh - 67px); }
+    .sidebar {
+      position: sticky;
+      top: 0;
+      display: flex;
+      width: 230px;
+      height: calc(100vh - 1px);
+      flex: 0 0 auto;
+      flex-direction: column;
+      gap: 4px;
+      overflow-y: auto;
+      padding: 12px 10px;
+      border-right: 1px solid var(--border);
+      background: rgba(255, 255, 255, .56);
+    }
+    .sidebar-section {
+      padding: 10px 8px 4px;
+      color: var(--subtle);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+    .nav-btn {
+      width: 100%;
+      padding: 9px 10px;
+      border: 0;
+      border-radius: 9px;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      text-align: left;
+      font-size: 13px;
+    }
+    .nav-btn:hover, .nav-btn:focus-visible { background: var(--surface-alt); }
+    .nav-btn.active { background: rgba(74, 109, 247, .12); color: var(--accent-dark); font-weight: 700; }
+    .main { width: 100%; min-width: 0; padding: 20px 24px; }
+    .panel { width: 100%; max-width: 1000px; margin: 0 auto; }
+    [hidden] { display: none !important; }
+    .hero {
+      margin-bottom: 16px;
+      padding: 22px 24px;
+      border: 1px solid rgba(74, 109, 247, .2);
+      border-radius: var(--radius);
+      background: linear-gradient(135deg, rgba(74, 109, 247, .12), rgba(124, 58, 237, .08));
+    }
+    .hero h2 { margin: 0 0 8px; color: #233069; font-size: 26px; line-height: 1.3; }
+    .hero p { margin: 0; color: var(--muted); }
+    .section-box {
+      margin: 0 0 16px;
+      padding: 18px 20px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+    }
+    .section-box h3 { margin: 0 0 9px; font-size: 19px; }
+    .section-box h4 { margin: 18px 0 6px; font-size: 16px; }
+    .section-box p { margin: 8px 0; color: var(--muted); }
+    .section-box ul, .section-box ol { margin: 8px 0; padding-left: 23px; color: var(--muted); }
+    .concept-grid, .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin: 14px 0;
+    }
+    .stat-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .concept, .stat-card {
+      padding: 14px;
+      border: 1px solid rgba(74, 109, 247, .15);
+      border-radius: 11px;
+      background: var(--surface-alt);
+    }
+    .concept h3 { margin: 0 0 5px; font-size: 16px; }
+    .concept p, .stat-note { margin: 0; color: var(--muted); font-size: 14px; }
+    .stat-label { color: var(--subtle); font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+    .stat-value { margin: 4px 0; font-size: 20px; font-weight: 800; line-height: 1.25; }
+    .formula {
+      margin: 14px 0;
+      padding: 15px 17px;
+      overflow-x: auto;
+      border: 1px solid rgba(74, 109, 247, .2);
+      border-radius: 10px;
+      background: #f7f9ff;
+      color: var(--text);
+      font: 15px/1.7 var(--mono);
+    }
+    figure { margin: 16px 0; }
+    figure img {
+      display: block;
+      width: 100%;
+      max-height: 480px;
+      object-fit: contain;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: #fff;
+    }
+    figcaption { margin-top: 6px; color: var(--subtle); font-size: 12px; }
+    .callout {
+      margin: 14px 0;
+      padding: 12px 15px;
+      border-left: 4px solid var(--accent);
+      border-radius: 5px;
+      background: #f2f5ff;
+      color: var(--muted);
+    }
+    .callout.warning { border-color: #e19a26; background: #fff8e9; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+    th, td { padding: 10px 12px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
+    th { background: var(--surface-alt); color: var(--subtle); font-size: 11px; letter-spacing: .07em; text-transform: uppercase; }
+    td { color: var(--muted); }
+    .calculator {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin: 14px 0;
+    }
+    .field { display: flex; flex-direction: column; gap: 5px; color: var(--muted); font-size: 13px; font-weight: 650; }
+    .field input[type="number"] {
+      width: 100%;
+      padding: 9px 10px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--text);
+    }
+    .check-field { display: flex; grid-column: 1 / -1; align-items: center; gap: 9px; color: var(--muted); }
+    .result {
+      min-height: 60px;
+      padding: 12px 14px;
+      border: 1px solid #86efac;
+      border-radius: 9px;
+      background: #ecfdf5;
+      color: #166534;
+    }
+    .quiz-options { display: grid; gap: 8px; margin: 10px 0; }
+    .quiz-options label { display: flex; align-items: flex-start; gap: 9px; color: var(--muted); }
+    .quiz-card { margin: 14px 0; padding: 14px; border: 1px solid var(--border); border-radius: 10px; }
+    .quiz-card legend { padding: 0 5px; font-weight: 750; }
+    .quiz-card .feedback { font-size: 14px; }
+    .action-btn {
+      padding: 9px 14px;
+      border: 0;
+      border-radius: 8px;
+      background: var(--accent);
+      color: #fff;
+      cursor: pointer;
+      font-weight: 700;
+    }
+    .action-btn:hover, .action-btn:focus-visible { background: var(--accent-dark); }
+    .feedback { min-height: 25px; margin-top: 9px; font-weight: 650; }
+    .source-list li { margin: 8px 0; overflow-wrap: anywhere; }
+    a { color: var(--accent-dark); }
+    .credit { color: var(--subtle); font-size: 12px; }
+    @media (max-width: 850px) {
+      .sidebar { width: 205px; }
+      .stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 650px) {
+      header { align-items: flex-start; padding: 12px 14px; }
+      .header-meta { display: none; }
+      .layout { display: block; }
+      .sidebar { position: static; width: 100%; height: auto; max-height: 250px; border-right: 0; border-bottom: 1px solid var(--border); }
+      .main { padding: 14px; }
+      .concept-grid, .stat-grid, .calculator { grid-template-columns: 1fr; }
+      .check-field { grid-column: auto; }
+      .hero { padding: 18px; }
+      .hero h2 { font-size: 22px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo" aria-hidden="true">DQN</div>
+    <div>
+      <h1>Deep Q-Learning Lab</h1>
+      <p>Q-Function approximation using deep learning</p>
+    </div>
+    <div class="header-meta">
+      <div><strong>PMAIDE RL Lab</strong> &middot; CSE908</div>
+      <div>Topic: Deep Q-Networks and stable training</div>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav class="sidebar" aria-label="DQN lab sections">
+      <div class="sidebar-section">Lessons</div>
+      <button class="nav-btn active" type="button" data-panel="overview" aria-current="page">📘 Introduction</button>
+      <button class="nav-btn" type="button" data-panel="scaling">📈 From Q-Learning to DQN</button>
+      <button class="nav-btn" type="button" data-panel="network">🧠 The DQN Network</button>
+      <button class="nav-btn" type="button" data-panel="algorithm">⚙️ Training Algorithm</button>
+      <button class="nav-btn" type="button" data-panel="hyperparameters">🎛️ Hyperparameters</button>
+      <div class="sidebar-section">Practice</div>
+      <button class="nav-btn" type="button" data-panel="lab">🧪 Sample quizes</button>
+      <button class="nav-btn" type="button" data-panel="colab-lab">🧪 DQN Colab Lab</button>
+      <button class="nav-btn" type="button" data-panel="references">📚 References</button>
+    </nav>
+
+    <main class="main">
+      <section class="panel" id="panel-overview">
+        <div class="hero">
+          <h2>Deep Q-Learning: scaling value-based RL</h2>
+          <p>DQN makes Q-learning scalable by growing from a small Q-table into a neural network that scores actions, samples environment by interaction, and trains on experience.</p>
+        </div>
+        <div class="stat-grid" aria-label="DQN at a glance">
+          <div class="stat-card"><div class="stat-label">Input</div><div class="stat-value">State</div><div class="stat-note">Often a stack of image frames</div></div>
+          <div class="stat-card"><div class="stat-label">Model</div><div class="stat-value">Q-network</div><div class="stat-note">Approximates action values</div></div>
+          <div class="stat-card"><div class="stat-label">Learning signal</div><div class="stat-value">Loss function</div><div class="stat-note">Prediction compared with a target</div></div>
+          <div class="stat-card"><div class="stat-label">Stability tools</div><div class="stat-value">Replay + target</div><div class="stat-note">Reduce correlated, moving updates</div></div>
+        </div>
+        <div class="section-box">
+          <h3>Why introduce a deep Q-network?</h3>
+          <p>Tabular Q-learning stores one value for every state-action pair. This is effective when the state set is small and discrete, but becomes impractical when observations are high-dimensional, such as pixels from an Atari game. DQN replaces the table with a parameterized function that predicts a value for each available action.</p>
+          <div class="formula">Q<sub>θ</sub>(s, a) ≈ expected return from taking action a in state s</div>
+          <p>The network is trained from experience rather than being given the correct action for every state. At decision time, an epsilon-greedy policy usually chooses between the highest-valued action and exploration.</p>
+          <figure>
+            <img src="./images/dqn-thumbnail.png" alt="Deep reinforcement learning course illustration introducing DQN">
+            <figcaption>Course illustration used in the Deep Q-Learning unit.</figcaption>
+          </figure>
+        </div>
+        <div class="section-box">
+          <h3>Learning outcomes</h3>
+          <ul>
+            <li>Explain why tabular Q-learning does not scale to image-sized state spaces.</li>
+            <li>Describe how a neural network maps an observation to action-value estimates.</li>
+            <li>Calculate a one-step Q-learning target and squared TD loss.</li>
+            <li>Explain the roles of replay memory, a target network, and Double DQN.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="panel" id="panel-scaling" hidden>
+        <div class="hero">
+          <h2>From Q-Learning to DQN</h2>
+          <p>The value-learning objective remains familiar; the representation of the Q-function changes.</p>
+        </div>
+        <div class="section-box">
+          <h3>The table is the bottleneck</h3>
+          <p>In tabular Q-learning, the value for each state and action is stored in a table. This is manageable in compact environments, but a pixel observation can take an enormous number of possible values. Storing a separate row for every observation is not a realistic solution.</p>
+          <figure>
+            <img src="./images/atari-observation.jpg" alt="An Atari game observation illustrating the high-dimensional visual input">
+            <figcaption>Pixel observations make explicit state enumeration impractical.</figcaption>
+          </figure>
+          <div class="concept-grid">
+            <div class="concept"><h3>Function approximation</h3><p>Use a parameterized model Q<sub>θ</sub>(s, a) to generalize estimates across observations.</p></div>
+            <div class="concept"><h3>Shared representation</h3><p>One network processes the state and emits a value for every legal action.</p></div>
+          </div>
+          <figure>
+            <img src="./images/deep-qlearning-to-qnetwork.jpg" alt="Diagram showing a neural network approximating the Q-function">
+            <figcaption>Q-function approximation diagram.</figcaption>
+          </figure>
+        </div>
+        <div class="section-box">
+          <h3>What stays the same?</h3>
+          <p>The agent still estimates action values, explores while gathering data, and prefers actions with larger estimated Q-values. What changes is the update: instead of directly editing a table cell, the agent adjusts network parameters to reduce prediction error on sampled transitions.</p>
+          <div class="formula">Q(s, a) ← Q(s, a) + α [r + γ max<sub>a′</sub> Q(s′, a′) − Q(s, a)]</div>
+          <div class="callout">The bracketed quantity is the temporal-difference (TD) error. DQN turns this difference into a loss and uses gradient-based optimization to update the network.</div>
+        </div>
+        <figure>
+          <img src="./images/q-target.jpg" alt="Diagram illustrating the Q-target used in DQN">
+          <figcaption>Illustration of a Q-learning target.</figcaption>
+        </figure>
+        <div class="section-box">
+          <h3>Gradient-based optimization to update the network </h3>
+          <div class="formula">θ ← θ − α ∇<sub>θ</sub> Loss(θ)</div>
+        </div>
+      </section>
+
+      <section class="panel" id="panel-network" hidden>
+        <div class="hero">
+          <h2>The Deep Q-Network</h2>
+          <p>Images are prepared as compact observations, passed through a feature extractor, and converted into one Q-value per action.</p>
+        </div>
+        <div class="section-box">
+          <h3>Observation pipeline</h3>
+          <ol>
+            <li>Convert each frame to grayscale and resize it to 84 × 84 pixels to reduce input size.</li>
+            <li>Stack four consecutive frames so the input carries short-term motion information as well as appearance.</li>
+            <li>Pass the stack through convolutional layers to extract spatial features.</li>
+            <li>Use fully connected layers to produce Q-values for the available actions.</li>
+          </ol>
+          <figure>
+            <img src="./images/preprocessing.jpg" alt="Illustration of image preprocessing for a DQN input">
+            <figcaption>Example image preprocessing before network input.</figcaption>
+          </figure>
+          <figure>
+            <img src="./images/deep-q-network.jpg" alt="Deep Q-network diagram with stacked frames, convolutional layers, and action values">
+            <figcaption>Example DQN architecture: stacked frames feed convolutional and fully connected layers.</figcaption>
+          </figure>
+        </div>
+        <div class="section-box">
+          <h3>Why stack frames?</h3>
+          <p>A single still image often does not reveal velocity or direction. For example, one frame may show a ball but not whether it is moving left or right. Several recent frames provide temporal context to a feed-forward network.</p>
+          <figure>
+            <img src="./images/temporal-limitation.jpg" alt="Single-frame example illustrating missing motion information">
+            <figcaption>One frame can be ambiguous about motion.</figcaption>
+          </figure>
+          <figure>
+            <img src="./images/temporal-limitation-frames.jpg" alt="Multiple consecutive frames revealing the direction of movement">
+            <figcaption>A short frame history can reveal motion direction.</figcaption>
+          </figure>
+          <div class="callout">Frame stacking supplies a short history; it does not guarantee that the resulting observation is fully Markov for every task.</div>
+        </div>
+      </section>
+
+      <section class="panel" id="panel-algorithm" hidden>
+        <div class="hero">
+          <h2>How DQN learns</h2>
+          <p>Sampling and training alternate: gather transitions, then learn from a random mini-batch instead of updating on only the latest step.</p>
+        </div>
+        <div class="section-box">
+          <h3>Two phases of DQN</h3>
+          <p>Sampling: we perform actions and store the observed experience tuples in a replay memory.</p>
+          <p>Training: Select a small batch of tuples randomly and learn from this batch using a gradient descent update step.</p>
+          <p>Gradient descent changes the online network parameters to reduce the loss. The target value is treated as a fixed label for that update, rather than differentiated through.</p>
+          <figure>
+            <img src="./images/sampling-training.jpg" alt="Diagram of the DQN sampling and training phases">
+            <figcaption>Sampling and training phases in a DQN loop.</figcaption>
+          </figure>
+        </div>
+        <div class="section-box">
+          <h3>Stabilizing ideas</h3>
+          <p>Deep Q-Learning training might suffer from instability, mainly because of combining a non-linear Q-value function (Neural Network) and bootstrapping (when we update targets with existing estimates and not an actual complete return).</p>
+          <div class="concept-grid">
+            <div class="concept"><h3>Experience replay</h3><p>Store transitions and sample random mini-batches. Reuse past data and reduce the strong sequential correlation between updates.</p></div>
+            <div class="concept"><h3>Fixed target network</h3><p>Compute targets with a separate network whose weights are held fixed for a period, then periodically copy online weights into it.</p></div>
+          </div>
+          <h4>Why create a replay memory?</h4>
+          <p>In online learning, an agent can update from its latest transition and then move on. A replay buffer with capacity <em>N</em> stores transitions <code>(state, action, reward, next state)</code>, so training can reuse experiences instead of learning only once from each latest step.</p>
+          <p>Training samples a mini-batch at random from the buffer. Mixing older and newer transitions reduces the correlation that would arise from learning only from consecutive frames, and gives earlier situations another chance to influence the network. This can lessen interference with previously learned behavior.</p>
+          <h4>Why use a fixed Q-target?</h4>
+          <p>DQN learns by comparing the online network's estimate <code>Q(state, action)</code> with a bootstrapped target: the observed reward plus the discounted best estimated value of the next state. If the same network produces both the estimate and the target, changing its weights changes the answer it is trying to match. The learning target can move at every update, contributing to oscillation or instability.</p>
+          <figure>
+            <img src="./images/q-target.jpg" alt="Diagram illustrating the Q-target used in DQN">
+            <figcaption>Illustration of a Q-learning target.</figcaption>
+          </figure>
+          <p>A target network provides a steadier reference: it calculates the next-state value while its weights are held fixed for a period. Every <em>C</em> training steps, copy the online network's weights into the target network. This slows target changes; it helps stabilize training.</p>
+          <figure>
+            <img src="./images/fixed-target-pseudocode.jpg" alt="Pseudocode illustration of target network updates">
+            <figcaption>Fixed-target update pseudocode.</figcaption>
+          </figure>
+        </div>
+        <div class="section-box">
+          <h3>Training loop at a glance</h3>
+          <ol>
+            <li>Initialize an online Q-network, a target network, and a replay buffer.</li>
+            <li>Choose an action with an exploration policy and observe reward, next state, and termination.</li>
+            <li>Store the transition in the replay buffer.</li>
+            <li>Sample a mini-batch and form TD targets using the target network.</li>
+            <li>Minimize the batch loss; periodically copy online parameters to the target network.</li>
+          </ol>
+          <div class="callout warning">Replay and target networks improve stability but do not guarantee convergence. Learning still depends on the environment, model, data, and hyperparameters.</div>
+        </div>
+      </section>
+
+      <section class="panel" id="panel-hyperparameters" hidden>
+        <div class="hero">
+          <h2>Hyperparameters and network weights</h2>
+          <p>Hyperparameters are settings we choose to guide learning. Network weights are the values the DQN learns from experience.</p>
+        </div>
+        <div class="section-box">
+          <h3>Settings that shape learning</h3>
+          <p>These settings affect how quickly the agent learns, how much it explores, and how steady its updates are. The best values depend on the game and training setup.</p>
+
+          <h4>1. Learning rate (α or <code>lr</code>)</h4>
+          <p><strong>Where it is used:</strong> The optimizer uses it when adjusting the network after calculating the loss.</p>
+          <p><strong>What it does:</strong> It controls how big each learning step is. If it is too high, the action scores can change too much and learning may become unstable. If it is too low, learning can take a long time.</p>
+          <div class="formula">θ ← θ − α ∇<sub>θ</sub> Loss(θ)</div>
+
+          <h4>2. Discount factor (γ or <code>gamma</code>)</h4>
+          <p><strong>Where it is used:</strong> In the Q-learning target, which combines the reward now with an estimate of future reward.</p>
+          <div class="formula">Target = reward + γ × best estimated value of the next situation</div>
+          <p><strong>What it does:</strong> It controls how much the agent cares about future rewards. A value near 1 gives future rewards more weight; a smaller value focuses more on rewards right now. Atari tasks often use a high value, such as 0.99, to encourage longer-term play.</p>
+
+          <h4>3. Exploration rate (ε or <code>epsilon</code>)</h4>
+          <p><strong>Where it is used:</strong> When the agent chooses an action. With probability ε it picks a random action; otherwise it picks the action with the highest estimated score.</p>
+          <p><strong>What it does:</strong> It balances trying new actions with using what the agent has learned. Training often starts with more random actions, then gradually lowers ε. It usually remains a little above zero so the agent still explores.</p>
+
+          <h4>4. Replay buffer size and batch size</h4>
+          <p><strong>Where they are used:</strong> When saving past experiences and choosing examples for a learning update.</p>
+          <p><strong>What they do:</strong> The replay buffer holds past experiences. A larger buffer can keep a wider range of moments. The batch size is how many saved experiences are used in one update. Random batches help reduce the link between nearby game frames; they do not make all examples fully independent.</p>
+
+          <h4>5. Target network update timestep</h4>
+          <p><strong>Where it is used:</strong> When copying or slowly updating the main network's weights into the target network.</p>
+          <p><strong>What it does:</strong> DQN uses a target network to calculate learning targets. Keeping it unchanged for a while, then updating it every set number of steps, makes the targets change less often. Some versions instead make small, frequent updates using a setting called τ (tau).</p>
+        </div>
+        <div class="section-box">
+          <h3>What are network weights?</h3>
+          <p>Weights (written θ) are the numbers inside the network that it learns to change. Hyperparameters tell the network how to learn; the weights are what it learns. Together, weights and biases help the network turn an image into a score for each available action.</p>
+
+          <h4>CNN filters and decision layers</h4>
+          <p>The early convolutional layers use small filters, also called kernels, to find patterns in the images, such as edges or objects. These filters are part of the network weights, and learning adjusts them. Later, fully connected layers use the patterns found earlier to produce action scores.</p>
+          <p>Because the input includes several recent frames, the network can learn clues about motion as well as appearance. Its weights help it recognize useful patterns without storing a separate answer for every possible screen.</p>
+
+          <h4>How the weights learn</h4>
+          <ol>
+            <li>The main (online) network uses its weights θ to predict the score for an action that was taken.</li>
+            <li>The target network, with weights θ<sup>−</sup>, helps calculate the reward-plus-future-reward target.</li>
+            <li>The loss measures the gap between the predicted score and the target.</li>
+            <li>The optimizer uses the learning rate to adjust the online weights and reduce that gap.</li>
+          </ol>
+          <div class="formula">θ ← θ − α ∇<sub>θ</sub> Loss(θ)</div>
+          <div class="formula">Online weights θ → prediction → compare with target → adjust θ to reduce the error</div>
+          <div class="callout">The online network learns on each update. The target network is updated less often, or slowly, to help keep the learning target steadier.</div>
+        </div>
+      </section>
+
+      <section class="panel" id="panel-colab-lab" hidden>
+        <div class="hero">
+          <h2>DQN Colab Lab</h2>
+          <p>Open the interactive notebook to explore a DQN lab in Google Colab.</p>
+        </div>
+        <div class="section-box">
+          <h3>Open the notebook</h3>
+          <p><a class="action-btn" href="https://colab.research.google.com/drive/1LAK6S3LsR1JbcQOwwH-LVCspTh22S-4e?usp=sharing" target="_blank" rel="noopener noreferrer">Open DQN lab in Google Colab</a></p>
+        </div>
+      </section>
+
+      <section class="panel" id="panel-lab" hidden>
+        <div class="hero">
+          <h2>Sample quizes</h2>
+          <p>Change a sampled transition and inspect how the target and prediction error change.</p>
+        </div>
+        <div class="section-box">
+          <h3>TD target and loss calculator</h3>
+          <p>Set the transition values. Turn on “terminal transition” to remove bootstrapping from the target.</p>
+          <div class="calculator">
+            <label class="field" for="reward">Reward r
+              <input id="reward" type="number" step="any" value="1">
+            </label>
+            <label class="field" for="discount">Discount γ (0 to 1)
+              <input id="discount" type="number" min="0" max="1" step="any" value="0.99">
+            </label>
+            <label class="field" for="next-value">Maximum next-state Q-value
+              <input id="next-value" type="number" step="any" value="2.4">
+            </label>
+            <label class="field" for="current-value">Current prediction Q(s, a)
+              <input id="current-value" type="number" step="any" value="1.6">
+            </label>
+            <label class="check-field" for="terminal">
+              <input id="terminal" type="checkbox">
+              Terminal transition (do not bootstrap)
+            </label>
+          </div>
+          <div class="result" id="calculation" role="status" aria-live="polite"></div>
+          <div class="callout">In a real DQN update, the current Q-value comes from the online network and the next-state estimate comes from the target network. This calculator uses the basic max-target form to focus on the arithmetic.</div>
+        </div>
+        <div class="section-box">
+          <h3>Check your understanding</h3>
+          <p>Answer the questions below, then check your score. The questions cover the key ideas from the Deep Q-Learning unit.</p>
+          <fieldset class="quiz-card" data-question="1" data-answer="b">
+            <legend>1. What is a tabular reinforcement-learning method?</legend>
+            <div class="quiz-options">
+              <label><input type="radio" name="q1" value="a"> A method that stores only the most recent transition.</label>
+              <label><input type="radio" name="q1" value="b"> A method whose state-action values can be represented directly in a finite table or array.</label>
+              <label><input type="radio" name="q1" value="c"> A method that must use image observations.</label>
+            </div>
+            <div class="feedback" aria-live="polite"></div>
+          </fieldset>
+          <fieldset class="quiz-card" data-question="2" data-answer="c">
+            <legend>2. Why is a conventional Q-table impractical for a pixel-based Atari observation?</legend>
+            <div class="quiz-options">
+              <label><input type="radio" name="q2" value="a"> Q-learning cannot use rewards from games.</label>
+              <label><input type="radio" name="q2" value="b"> Atari actions are continuous, so no action values can be estimated.</label>
+              <label><input type="radio" name="q2" value="c"> The observation space is enormous, making a separate table entry for every state infeasible.</label>
+            </div>
+            <div class="feedback" aria-live="polite"></div>
+          </fieldset>
+          <fieldset class="quiz-card" data-question="3" data-answer="a">
+            <legend>3. What useful information can a stack of recent frames provide?</legend>
+            <div class="quiz-options">
+              <label><input type="radio" name="q3" value="a"> Temporal clues, such as the direction an object is moving.</label>
+              <label><input type="radio" name="q3" value="b"> A guarantee that the agent never needs exploration.</label>
+              <label><input type="radio" name="q3" value="c"> The exact reward for every future action.</label>
+            </div>
+            <div class="feedback" aria-live="polite"></div>
+          </fieldset>
+          <fieldset class="quiz-card" data-question="4" data-answer="sampling,training">
+            <legend>4. Which two phases make up the DQN training process? (Select two.)</legend>
+            <div class="quiz-options">
+              <label><input type="checkbox" name="q4" value="sampling"> Sampling experience and storing transitions.</label>
+              <label><input type="checkbox" name="q4" value="shuffling"> Shuffling action labels to change the reward.</label>
+              <label><input type="checkbox" name="q4" value="reranking"> Reranking states by their pixel values.</label>
+              <label><input type="checkbox" name="q4" value="training"> Training from sampled batches with gradient updates.</label>
+            </div>
+            <div class="feedback" aria-live="polite"></div>
+          </fieldset>
+          <fieldset class="quiz-card" data-question="5" data-answer="b">
+            <legend>5. Why does DQN use a replay buffer?</legend>
+            <div class="quiz-options">
+              <label><input type="radio" name="q5" value="a"> It converts every reward into the same positive value.</label>
+              <label><input type="radio" name="q5" value="b"> It allows experience to be reused and random batches to reduce dependence on sequentially correlated samples.</label>
+              <label><input type="radio" name="q5" value="c"> It replaces the need to estimate action values.</label>
+            </div>
+            <div class="feedback" aria-live="polite"></div>
+          </fieldset>
+          <fieldset class="quiz-card" data-question="6" data-answer="c">
+            <legend>6. In Double DQN, how are the next action and its target value determined?</legend>
+            <div class="quiz-options">
+              <label><input type="radio" name="q6" value="a"> The target network selects and evaluates the action, while the online network is unused.</label>
+              <label><input type="radio" name="q6" value="b"> Both networks independently select different actions and their rewards are added.</label>
+              <label><input type="radio" name="q6" value="c"> The online network selects the next action, and the target network evaluates that action.</label>
+            </div>
+            <div class="feedback" aria-live="polite"></div>
+          </fieldset>
+          <button class="action-btn" id="check-answer" type="button">Check answers</button>
+          <div class="feedback" id="quiz-feedback" role="status" aria-live="polite"></div>
+        </div>
+      </section>
+
+      <section class="panel" id="panel-references" hidden>
+        <div class="hero">
+          <h2>References and image credits</h2>
+          <p>Lesson explanations in this lab are paraphrased study notes. Course figures are included locally for use with this offline lesson.</p>
+        </div>
+        <div class="section-box">
+          <h3>Deep RL Course lessons</h3>
+          <ol class="source-list">
+            <li><a href="https://huggingface.co/learn/deep-rl-course/en/unit3/introduction" target="_blank" rel="noopener noreferrer">Deep Q-Learning — Introduction</a></li>
+            <li><a href="https://huggingface.co/learn/deep-rl-course/en/unit3/from-q-to-dqn" target="_blank" rel="noopener noreferrer">From Q-Learning to Deep Q-Learning</a></li>
+            <li><a href="https://huggingface.co/learn/deep-rl-course/en/unit3/deep-q-network" target="_blank" rel="noopener noreferrer">The Deep Q-Network</a></li>
+            <li><a href="https://huggingface.co/learn/deep-rl-course/en/unit3/deep-q-algorithm" target="_blank" rel="noopener noreferrer">The Deep Q-Learning Algorithm</a></li>
+            <li><a href="https://huggingface.co/learn/deep-rl-course/en/unit3/quiz" target="_blank" rel="noopener noreferrer">Deep Q-Learning Quiz</a></li>
+          </ol>
+          <h3>Code implementation</h3>
+          <ul class="source-list">
+            <li><a href="https://github.com/vwxyzjn/cleanrl/blob/master/cleanrl/dqn_atari.py" target="_blank" rel="noopener noreferrer">CleanRL Atari DQN implementation</a></li>
+          </ul>
+          <p class="credit">All illustrations in the images folder are from the Hugging Face Deep RL Course course-images dataset and are used here with source attribution. Image rights remain with their respective authors.</p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const navigationButtons = document.querySelectorAll('.nav-btn');
+    const panels = document.querySelectorAll('.panel');
+
+    navigationButtons.forEach((button) => {
+      button.addEventListener('click', () => {
+        const selectedPanel = button.dataset.panel;
+        navigationButtons.forEach((item) => {
+          const isActive = item === button;
+          item.classList.toggle('active', isActive);
+          if (isActive) item.setAttribute('aria-current', 'page');
+          else item.removeAttribute('aria-current');
+        });
+        panels.forEach((panel) => {
+          panel.hidden = panel.id !== `panel-${selectedPanel}`;
+        });
+        document.querySelector('.main').scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    });
+
+    const calculatorInputs = ['reward', 'discount', 'next-value', 'current-value', 'terminal']
+      .map((id) => document.getElementById(id));
+    const calculation = document.getElementById('calculation');
+
+    function updateCalculation() {
+      const [rewardInput, discountInput, nextValueInput, currentValueInput, terminalInput] = calculatorInputs;
+      const reward = Number(rewardInput.value);
+      const discount = Number(discountInput.value);
+      const nextValue = Number(nextValueInput.value);
+      const currentValue = Number(currentValueInput.value);
+      const values = [reward, discount, nextValue, currentValue];
+
+      if (values.some((value) => !Number.isFinite(value)) || discount < 0 || discount > 1) {
+        calculation.textContent = 'Enter finite values and a discount factor between 0 and 1.';
+        return;
+      }
+
+      const target = reward + (terminalInput.checked ? 0 : discount * nextValue);
+      const tdError = target - currentValue;
+      const loss = tdError * tdError;
+      calculation.textContent = `Target: ${target.toFixed(4)} · TD error: ${tdError.toFixed(4)} · Squared loss: ${loss.toFixed(4)}`;
+    }
+
+    calculatorInputs.forEach((input) => input.addEventListener('input', updateCalculation));
+    updateCalculation();
+
+    document.getElementById('check-answer').addEventListener('click', () => {
+      const feedback = document.getElementById('quiz-feedback');
+      const questions = [...document.querySelectorAll('.quiz-card')];
+      let correctCount = 0;
+      let answeredCount = 0;
+
+      questions.forEach((question) => {
+        const selected = [...question.querySelectorAll('input:checked')].map((input) => input.value).sort();
+        const expected = question.dataset.answer.split(',').sort();
+        const result = question.querySelector('.feedback');
+        const isCorrect = selected.length === expected.length
+          && selected.every((answer, index) => answer === expected[index]);
+
+        if (selected.length > 0) answeredCount += 1;
+        if (isCorrect) correctCount += 1;
+        result.textContent = selected.length === 0
+          ? 'Choose an answer for this question.'
+          : isCorrect ? 'Correct.' : 'Review this idea and try again.';
+        result.style.color = selected.length === 0 || !isCorrect ? 'var(--amber)' : 'var(--green)';
+      });
+
+      feedback.textContent = answeredCount < questions.length
+        ? `Score: ${correctCount} of ${questions.length}. Answer all questions to complete the quiz.`
+        : `Score: ${correctCount} of ${questions.length}.`;
+      feedback.style.color = answeredCount < questions.length ? 'var(--amber)' : 'var(--green)';
+    });
+  </script>
+</body>
+</html>
