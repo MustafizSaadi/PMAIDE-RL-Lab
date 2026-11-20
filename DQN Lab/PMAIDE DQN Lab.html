@@ -765,9 +765,8 @@ args = Args()
             <strong>Train, compare hyperparameters, and evaluate fairly</strong>
           </div>
           <div class="task-body hidden">
-          <p>Train with a fixed budget and compare at least three controlled hyperparameter configurations. Suitable choices include learning rate, discount factor, replay-buffer capacity, batch size, target-network update frequency, and ε decay schedule. Change one factor at a time where practical, or use a documented small grid; keep the network, preprocessing, and total environment steps fixed so the comparison is meaningful.</p>
+          <p>Compare at least three controlled hyperparameter configurations. Suitable choices include learning rate, discount factor, replay-buffer capacity, batch size, target-network update frequency, and ε decay schedule. Change one factor at a time where practical; keep the network, preprocessing, and total environment steps fixed so the comparison is meaningful.</p>
           <ul>
-            <li>Use multiple training seeds when resources allow and record each configuration's training budget.</li>
             <li>Evaluate the frozen policy without exploratory actions on the same set of at least 10 episode seeds for every configuration.</li>
             <li>Report arithmetic mean and standard deviation of evaluation episode returns; do not choose different evaluation settings for each model.</li>
             <li>Plot training reward over environment steps and compare evaluation mean reward and standard deviation across configurations.</li>
