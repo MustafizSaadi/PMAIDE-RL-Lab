@@ -210,6 +210,77 @@
     .source-list li { margin: 8px 0; overflow-wrap: anywhere; }
     a { color: var(--accent-dark); }
     .credit { color: var(--subtle); font-size: 12px; }
+    .task-card {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+
+    .task-head {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 14px;
+      cursor: pointer;
+      background: rgba(74,109,247,0.02);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .task-no {
+      width: 25px;
+      height: 25px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: #eaf0ff;
+      color: var(--accent2);
+      font-size: 11px;
+      font-weight: 800;
+      flex-shrink: 0;
+    }
+
+    .task-head strong {
+      flex: 1;
+      font-size: 15px;
+      color: var(--text);
+    }
+
+    .task-body {
+      display: block;
+      padding: 12px 14px 14px;
+    }
+
+    .task-body.hidden { display: none; }
+
+    .task-body textarea {
+      width: 100%;
+      min-height: 160px;
+      resize: vertical;
+      padding: 12px 14px;
+      background: #101827;
+      color: #e5eeff;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px;
+      font-family: var(--mono);
+      font-size: 13px;
+      line-height: 1.7;
+      outline: none;
+      margin-top: 10px;
+    }
+
+    .result-box {
+      margin-top: 12px;
+      display: block;
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      line-height: 1.6;
+      background: #ecfdf5;
+      color: #166534;
+      border: 1px solid #86efac;
+    }
     @media (max-width: 850px) {
       .sidebar { width: 205px; }
       .stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -251,6 +322,7 @@
       <div class="sidebar-section">Practice</div>
       <button class="nav-btn" type="button" data-panel="lab">🧪 Sample quizes</button>
       <button class="nav-btn" type="button" data-panel="colab-lab">🧪 DQN Colab Lab</button>
+      <button class="nav-btn" type="button" data-panel="lab-task">🕹️ LAB Assignment</button>
       <button class="nav-btn" type="button" data-panel="references">📚 References</button>
     </nav>
 
@@ -282,7 +354,7 @@
             <li>Explain why tabular Q-learning does not scale to image-sized state spaces.</li>
             <li>Describe how a neural network maps an observation to action-value estimates.</li>
             <li>Calculate a one-step Q-learning target and squared TD loss.</li>
-            <li>Explain the roles of replay memory, a target network, and Double DQN.</li>
+            <li>Explain the roles of replay memory, and a target network.</li>
           </ul>
         </div>
       </section>
@@ -345,6 +417,10 @@
             <img src="./images/deep-q-network.jpg" alt="Deep Q-network diagram with stacked frames, convolutional layers, and action values">
             <figcaption>Example DQN architecture: stacked frames feed convolutional and fully connected layers.</figcaption>
           </figure>
+          <figure>
+            <img src="./images/CNN-DQN.png" alt="Convolutional layer architecture diagram">
+            <figcaption>How convolutional layers are used in a DQN.</figcaption>
+          </figure>
         </div>
         <div class="section-box">
           <h3>Why stack frames?</h3>
@@ -379,20 +455,44 @@
         <div class="section-box">
           <h3>Stabilizing ideas</h3>
           <p>Deep Q-Learning training might suffer from instability, mainly because of combining a non-linear Q-value function (Neural Network) and bootstrapping (when we update targets with existing estimates and not an actual complete return).</p>
+          <h4>The danger of non-linear function approximation (neural networks)</h5>
+          <p>In traditional tabular Q-learning, every state-action pair has its own independent entry in a lookup table. Updating the value of state <em>A</em> has no effect on state <em>B</em>.</p>
+          <p>A neural network instead generalizes by compressing and mapping states with shared weights:</p>
+          <ul>
+            <li>Updating the network weights to improve the prediction for state <em>A</em> also changes predictions for thousands of other states <em>B</em>, <em>C</em>, and <em>D</em> that share similar features.</li>
+            <li>This can accidentally destroy previously learned knowledge (catastrophic forgetting) and cause the network's outputs to oscillate wildly.</li>
+          </ul>
+          <h4>The Danger of Bootstrapping (The "Moving Target" Problem)</h5>
+          <p><strong>Bootstrapping</strong> means updating your current estimate using a future estimate rather than waiting for the actual final outcome:</p>
+          <ul>
+            <li>You train the network to match a target computed by the very same network, or a very close version of it.</li>
+            <li>If the same network produces both the estimate and the target, changing its weights changes the answer it is trying to match. </li>
+            <li>Because the network weights change slightly with every gradient step, the target moves every time you update, contributing to oscillation or instability.</li>
+          </ul>
+          <h4>When they combine: the vicious feedback loop</h4>
+          <p>When non-linear function approximation and bootstrapping are combined, minor approximation errors in the neural network can be fed back into the target calculations:</p>
+          <ol>
+            <li>The network makes a slight overestimation or error for a future state <em>s&#8242;</em>.</li>
+            <li>Because of bootstrapping, that error is treated as part of the "truth" (<code>r + &gamma; max Q</code>) for the current state <em>s</em>.</li>
+            <li>The neural network adjusts its weights to chase this flawed target.</li>
+            <li>Because it is a non-linear network, this weight adjustment ripples across the entire state space, compounding the error further.</li>
+            <li>This feedback loop can snowball rapidly, causing Q-values to diverge to infinity or collapse entirely.</li>
+          </ol>
+          <h3>The Solution:</h3>
           <div class="concept-grid">
             <div class="concept"><h3>Experience replay</h3><p>Store transitions and sample random mini-batches. Reuse past data and reduce the strong sequential correlation between updates.</p></div>
             <div class="concept"><h3>Fixed target network</h3><p>Compute targets with a separate network whose weights are held fixed for a period, then periodically copy online weights into it.</p></div>
           </div>
-          <h4>Why create a replay memory?</h4>
+          <h4>Experience replay buffer</h4>
           <p>In online learning, an agent can update from its latest transition and then move on. A replay buffer with capacity <em>N</em> stores transitions <code>(state, action, reward, next state)</code>, so training can reuse experiences instead of learning only once from each latest step.</p>
           <p>Training samples a mini-batch at random from the buffer. Mixing older and newer transitions reduces the correlation that would arise from learning only from consecutive frames, and gives earlier situations another chance to influence the network. This can lessen interference with previously learned behavior.</p>
-          <h4>Why use a fixed Q-target?</h4>
-          <p>DQN learns by comparing the online network's estimate <code>Q(state, action)</code> with a bootstrapped target: the observed reward plus the discounted best estimated value of the next state. If the same network produces both the estimate and the target, changing its weights changes the answer it is trying to match. The learning target can move at every update, contributing to oscillation or instability.</p>
+          <h4>Fixed target network</h4>
+          <p>DQN learns by comparing the online network's estimate <code>Q(state, action)</code> with a bootstrapped target: the observed reward plus the discounted best estimated value of the next state.</p>
+          <p>A target network provides a steadier reference: it calculates the next-state value while its weights are held fixed for a period. Every <em>C</em> training steps, copy the online network's weights into the target network. This slows target changes; it helps stabilize training.</p>
           <figure>
             <img src="./images/q-target.jpg" alt="Diagram illustrating the Q-target used in DQN">
             <figcaption>Illustration of a Q-learning target.</figcaption>
           </figure>
-          <p>A target network provides a steadier reference: it calculates the next-state value while its weights are held fixed for a period. Every <em>C</em> training steps, copy the online network's weights into the target network. This slows target changes; it helps stabilize training.</p>
           <figure>
             <img src="./images/fixed-target-pseudocode.jpg" alt="Pseudocode illustration of target network updates">
             <figcaption>Fixed-target update pseudocode.</figcaption>
@@ -436,8 +536,7 @@
 
           <h4>4. Replay buffer size and batch size</h4>
           <p><strong>Where they are used:</strong> When saving past experiences and choosing examples for a learning update.</p>
-          <p><strong>What they do:</strong> The replay buffer holds past experiences. A larger buffer can keep a wider range of moments. The batch size is how many saved experiences are used in one update. Random batches help reduce the link between nearby game frames; they do not make all examples fully independent.</p>
-
+          <p><strong>What they do:</strong> The replay buffer holds past experiences. A larger buffer can keep a wider range of moments. The batch size is how many saved experiences are used in one update. Random batches help reduce the link between nearby game frames.</p>
           <h4>5. Target network update timestep</h4>
           <p><strong>Where it is used:</strong> When copying or slowly updating the main network's weights into the target network.</p>
           <p><strong>What it does:</strong> DQN uses a target network to calculate learning targets. Keeping it unchanged for a while, then updating it every set number of steps, makes the targets change less often. Some versions instead make small, frequent updates using a setting called τ (tau).</p>
@@ -553,7 +652,7 @@
             <div class="feedback" aria-live="polite"></div>
           </fieldset>
           <fieldset class="quiz-card" data-question="6" data-answer="c">
-            <legend>6. In Double DQN, how are the next action and its target value determined?</legend>
+            <legend>6. In DQN, how are the next action and its target value determined?</legend>
             <div class="quiz-options">
               <label><input type="radio" name="q6" value="a"> The target network selects and evaluates the action, while the online network is unused.</label>
               <label><input type="radio" name="q6" value="b"> Both networks independently select different actions and their rewards are added.</label>
@@ -563,6 +662,140 @@
           </fieldset>
           <button class="action-btn" id="check-answer" type="button">Check answers</button>
           <div class="feedback" id="quiz-feedback" role="status" aria-live="polite"></div>
+        </div>
+      </section>
+
+      <section class="panel" id="panel-lab-task" hidden>
+        <div class="section-box">
+          <div class="section-title">Lab task</div>
+          <h3 style="font-size:28px; margin-bottom:10px; color:var(--text);">Human level control for Atari Breakout game</h3>
+          <p>
+            You are designing a learning controller for Atari Breakout game. Your goal is to destroy the brick wall. You can try to break through the wall and let the ball wreak havoc on the other side, all on its own! You have five lives.
+            This is called as the <strong><a href="https://ale.farama.org/environments/breakout/" target="_blank" rel="noopener noreferrer">Atari Breakout</a></strong> game.
+          </p>
+
+          <div style="margin-top:18px; background:rgba(74,109,247,0.04); border:1px solid rgba(74,109,247,0.18); border-radius:12px; padding:14px;">
+            <div class="section-title" style="margin-bottom:8px;">Atari Breakout environment</div>
+            <p>
+              In <strong>Atari Breakout</strong>, there are <strong>multiple levels</strong> with different brick layouts. The player controls a paddle at the bottom of the screen to bounce a ball and break bricks.
+            </p>
+            <p>
+              Breakout does not serve the ball until you press FIRE. Holding NOOP leaves the game idle, giving no reward and never ending. The ball must be served again with FIRE after each life lost, and the game ends when all lives are lost.
+            </p>
+
+            <div style="margin-top:14px; text-align:center;">
+              <img src="https://ale.farama.org/_images/breakout.gif" alt="Atari Breakout" style="max-width:100%; border:1px solid var(--border); border-radius:10px; background:#fff;" />
+            </div>
+          </div>
+
+          <div style="margin-top:18px; background:rgba(14,17,22,0.02); border:1px solid var(--border); border-radius:12px; padding:14px;">
+            <div class="section-title" style="margin-bottom:8px;">Action space 🎮</div>
+            <p>
+              The action space is discrete with <strong>6 actions available</strong>:
+            </p>
+            <ul style="margin:8px 0 0 22px; color:var(--text2); line-height:1.9; padding:0; list-style:disc;">
+              <li>0: NOOP</li>
+              <li>1: FIRE</li>
+              <li>2: RIGHT</li>
+              <li>3: LEFT</li>
+            </ul>
+          </div>
+
+          <div style="margin-top:18px; background:rgba(14,17,22,0.02); border:1px solid var(--border); border-radius:12px; padding:14px;">
+            <div class="section-title" style="margin-bottom:8px;">Reward function 💰</div>
+            <ul style="margin:8px 0 0 22px; color:var(--text2); line-height:1.9; padding:0; list-style:disc;">
+              <li>(bottom rows): 1 point each</li>
+              <li>As the row increases, point value increases by 2</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="task-card">
+          <div class="task-head" data-task="task1">
+            <div class="task-no">1</div>
+            <strong>Initialize the environment and the hyperparameters</strong>
+          </div>
+          <div class="task-body">
+            <p>Install and configure Gymnasium with Atari/ALE support, initialize <strong>ALE/Breakout-v5</strong>, and verify observations, actions, episode termination, and the FIRE start requirement. Implement DQN with an online Q-network, target network, replay buffer, mini-batch updates, and ε-greedy exploration.</p>
+            <ul>
+              <li>Use the same image preprocessing and frame-stack configuration in training and evaluation.</li>
+              <li>Handle Gymnasium reset and step outputs, including terminated/truncated episode flags.</li>
+              <li>Log episode rewards, training steps, and important hyperparameter values</li>
+              <li>Save the best model checkpoint and a short gameplay recording for the final configuration.</li>
+            </ul>
+            <textarea spellcheck="false"># Task 1: Initialize the breakout gaming environment
+#@title Hyperparameters
+@dataclass
+class Args:
+    exp_name: str = "dqn_atari"
+    seed: int = 1
+    torch_deterministic: bool = True
+    cuda: bool = True
+
+    # Environment
+    env_id: str = "ALE/Breakout-v5"
+    # "ALE/Breakout-v5"
+    total_timesteps: int = 20000
+
+    # DQN parameters
+    learning_rates: list[float] = [1e-4, 1e-3, 1e-5] # learning rates for testing
+    buffer_size: int = 2000 # Change buffer size based on total_timesteps
+    
+    gamma: list[float] = [0.99, 0.95, 0.995] # discount factors for testing
+    tau: float = 1.0 
+    target_network_frequency: int = 20 # Change based on total_timesteps
+
+    batch_size: list[int] = [32, 24, 64] # batch sizes for testing
+    start_e: float = 1.0
+    end_e: float = 0.01
+    exploration_fraction: float = 0.10
+    learning_starts: int = 200 # Change based on total_timesteps
+    train_frequency: int = 4
+    metric_log_timestep: int = 1000
+
+args = Args()
+</textarea>
+            <div class="result-box">Run complete episodes and produce reproducible reward and training logs before comparing hyperparameters.</div>
+          </div>
+        </div>
+
+        <div class="task-card">
+          <div class="task-head" data-task="task3">
+            <div class="task-no">2</div>
+            <strong>Train, compare hyperparameters, and evaluate fairly</strong>
+          </div>
+          <div class="task-body hidden">
+          <p>Train with a fixed budget and compare at least three controlled hyperparameter configurations. Suitable choices include learning rate, discount factor, replay-buffer capacity, batch size, target-network update frequency, and ε decay schedule. Change one factor at a time where practical, or use a documented small grid; keep the network, preprocessing, and total environment steps fixed so the comparison is meaningful.</p>
+          <ul>
+            <li>Use multiple training seeds when resources allow and record each configuration's training budget.</li>
+            <li>Evaluate the frozen policy without exploratory actions on the same set of at least 10 episode seeds for every configuration.</li>
+            <li>Report arithmetic mean and standard deviation of evaluation episode returns; do not choose different evaluation settings for each model.</li>
+            <li>Plot training reward over environment steps and compare evaluation mean reward and standard deviation across configurations.</li>
+          </ul>
+            
+            <div class="result-box">Higher mean evaluation reward with less standard deviation earns more marks.</div>
+          </div>
+        </div>
+
+        <div class="task-card">
+          <div class="task-head" data-task="task4">
+            <div class="task-no">3</div>
+            <strong>Prepare the final report and comparison</strong>
+          </div>
+          <div class="task-body hidden">
+            <p>
+              Each student should submit a three-page report summarizing the objective, game environment setup, the chosen algorithm, the experiment, the result, and the conclusion. Include a short explanation of how DQN works, the hyperparameter comparison, and the final takeaway from the learning process.
+            </p>
+            <ul style="margin:10px 0 0 22px; color:var(--text2); line-height:1.9; padding:0; list-style:disc;">
+              <li>Describe Breakout-v5, its environment, action observation setup, and different preprocessing.</li>
+              <li>Explain the Q-network, replay buffer, target network, ε-greedy exploration, and TD learning in your own words.</li>
+              <li>Video recording of the different learning strategies with different hyperparameters</li>
+            <li>Present mean reward and standard deviation for every configuration, with a plot or table and a short interpretation.</li>
+            <li>State which configuration performed best, discuss limitations or variability, and give your final learning takeaway.</li>
+            </ul>
+
+            <div class="result-box">The final takeaway should clearly show how different hyperparameters affect learning quality and which policy performs best.</div>
+          </div>
         </div>
       </section>
 
@@ -593,6 +826,13 @@
   <script>
     const navigationButtons = document.querySelectorAll('.nav-btn');
     const panels = document.querySelectorAll('.panel');
+
+    document.querySelectorAll('.task-head').forEach((head) => {
+      head.addEventListener('click', () => {
+        const body = head.nextElementSibling;
+        body.classList.toggle('hidden');
+      });
+    });
 
     navigationButtons.forEach((button) => {
       button.addEventListener('click', () => {
